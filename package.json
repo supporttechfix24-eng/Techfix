@@ -1,0 +1,9 @@
+{
+  "name": "techfix24",
+  "private": true,
+  "version": "1.0.0",
+  "description": "TechFix static site + Netlify Functions (appointment confirmation email)",
+  "dependencies": {
+    "nodemailer": "^6.9.14"
+  }
+}

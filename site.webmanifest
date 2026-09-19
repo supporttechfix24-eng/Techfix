@@ -1,0 +1,14 @@
+{
+  "name": "TechFix \u2013 Computer & Software Services",
+  "short_name": "TechFix",
+  "description": "Computer and software services in Sakhipur, Tangail \u2013 Windows installation, virus removal, data recovery and more.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    { "src": "/favicon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/favicon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

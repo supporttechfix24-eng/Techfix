@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://techfix24.netlify.app/</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://techfix24.netlify.app/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://techfix24.netlify.app/bn/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://techfix24.netlify.app/"/>
+  </url>
+  <url>
+    <loc>https://techfix24.netlify.app/bn/</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://techfix24.netlify.app/"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://techfix24.netlify.app/bn/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://techfix24.netlify.app/"/>
+  </url>
+
+  <url>
+    <loc>https://techfix24.netlify.app/services</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://techfix24.netlify.app/services"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://techfix24.netlify.app/bn/services"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://techfix24.netlify.app/services"/>
+  </url>
+  <url>
+    <loc>https://techfix24.netlify.app/bn/services</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://techfix24.netlify.app/services"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://techfix24.netlify.app/bn/services"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://techfix24.netlify.app/services"/>
+  </url>
+
+  <url>
+    <loc>https://techfix24.netlify.app/pricing</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://techfix24.netlify.app/pricing"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://techfix24.netlify.app/bn/pricing"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://techfix24.netlify.app/pricing"/>
+  </url>
+  <url>
+    <loc>https://techfix24.netlify.app/bn/pricing</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://techfix24.netlify.app/pricing"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://techfix24.netlify.app/bn/pricing"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://techfix24.netlify.app/pricing"/>
+  </url>
+
+  <url>
+    <loc>https://techfix24.netlify.app/appointment</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://techfix24.netlify.app/appointment"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://techfix24.netlify.app/bn/appointment"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://techfix24.netlify.app/appointment"/>
+  </url>
+  <url>
+    <loc>https://techfix24.netlify.app/bn/appointment</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://techfix24.netlify.app/appointment"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://techfix24.netlify.app/bn/appointment"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://techfix24.netlify.app/appointment"/>
+  </url>
+
+  <url>
+    <loc>https://techfix24.netlify.app/contact</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://techfix24.netlify.app/contact"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://techfix24.netlify.app/bn/contact"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://techfix24.netlify.app/contact"/>
+  </url>
+  <url>
+    <loc>https://techfix24.netlify.app/bn/contact</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://techfix24.netlify.app/contact"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://techfix24.netlify.app/bn/contact"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://techfix24.netlify.app/contact"/>
+  </url>
+
+  <url>
+    <loc>https://techfix24.netlify.app/reviews</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://techfix24.netlify.app/reviews"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://techfix24.netlify.app/bn/reviews"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://techfix24.netlify.app/reviews"/>
+  </url>
+  <url>
+    <loc>https://techfix24.netlify.app/bn/reviews</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://techfix24.netlify.app/reviews"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://techfix24.netlify.app/bn/reviews"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://techfix24.netlify.app/reviews"/>
+  </url>
+
+  <!-- Custom pages created from the Admin panel live at https://techfix24.netlify.app/p/<slug>
+       They are not added here automatically. When you publish an important new page,
+       copy the block below, change the slug and the date, then redeploy.
+
+  <url>
+    <loc>https://techfix24.netlify.app/p/YOUR-SLUG</loc>
+    <lastmod>YYYY-MM-DD</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  -->
+</urlset>

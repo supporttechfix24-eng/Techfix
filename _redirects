@@ -1,0 +1,14 @@
+/p/*   /page.html?p=:splat   200
+
+# Bengali pages: force the clean (no .html) URL as the canonical address.
+# Netlify already serves *.html files at their extension-less path by default,
+# but these explicit rules guarantee it even if that site-wide setting ever changes.
+/bn/services.html      /bn/services      301
+/bn/pricing.html       /bn/pricing       301
+/bn/appointment.html   /bn/appointment   301
+/bn/reviews.html       /bn/reviews       301
+/bn/contact.html       /bn/contact       301
+
+# Anything else that doesn't match a real file or the rule above
+# shows the branded 404 page (instead of Netlify's default error screen)
+/*     /404.html             404

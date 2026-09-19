@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel | TechFix</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+<meta name="robots" content="noindex, nofollow">
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/responsive-fixes.css">
+<style>
+:root{
+  --primary:#2563eb;
+  --primary-dark:#1e40af;
+  --ink:#0f172a;
+  --panel:#111827;
+  --panel-2:#1a2333;
+  --muted:#94a3b8;
+  --bg:#f4f6fb;
+  --card:#ffffff;
+  --border:#e5e9f2;
+  --success:#16a34a;
+  --danger:#dc2626;
+  --warn:#d97706;
+}
+*{box-sizing:border-box;}
+body{font-family:'Inter','Poppins',sans-serif;background:var(--bg);color:var(--ink);margin:0;}
+
+/* ===== Login screen ===== */
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 20% 20%, #1e3a8a 0%, #0f172a 55%, #0b1120 100%);padding:20px;}
+.login-card{background:#fff;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.35);padding:44px 38px;width:100%;max-width:400px;}
+.login-card .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.4rem;color:var(--primary);margin-bottom:6px;}
+.login-card p.sub{color:var(--muted);margin-bottom:26px;font-size:.92rem;}
+.login-card label{font-weight:600;font-size:.85rem;margin-bottom:5px;}
+.login-card .form-control{padding:11px 14px;border-radius:9px;border:1px solid var(--border);margin-bottom:16px;}
+.login-card .form-control:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.15);}
+.btn-login{background:var(--primary);border:none;color:#fff;font-weight:600;padding:12px;border-radius:9px;width:100%;transition:.2s;}
+.btn-login:hover{background:var(--primary-dark);color:#fff;}
+#loginError{display:none;background:#fee2e2;color:#991b1b;padding:10px 14px;border-radius:8px;font-size:.85rem;margin-bottom:16px;}
+
+/* ===== App shell ===== */
+#appShell{display:none;min-height:100vh;}
+.sidebar{width:250px;background:linear-gradient(180deg,var(--panel) 0%,var(--panel-2) 100%);color:#fff;position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:100;transition:transform .25s ease;}
+.sidebar .brand{padding:24px 22px;font-weight:700;font-size:1.25rem;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08);}
+.sidebar .brand i{color:var(--primary-dark);background:#fff;padding:8px;border-radius:8px;color:var(--primary);}
+.sidebar-nav{flex:1;padding:14px 10px;overflow-y:auto;}
+.sidebar-nav .nav-link{color:#c9d3e6;padding:11px 14px;border-radius:9px;font-size:.92rem;font-weight:500;display:flex;align-items:center;gap:11px;margin-bottom:3px;cursor:pointer;transition:.15s;}
+.sidebar-nav .nav-link i{width:18px;text-align:center;opacity:.85;}
+.sidebar-nav .nav-link:hover{background:rgba(255,255,255,.06);color:#fff;}
+.sidebar-nav .nav-link.active{background:var(--primary);color:#fff;}
+.sidebar-foot{padding:16px;border-top:1px solid rgba(255,255,255,.08);}
+.sidebar-foot .user-email{font-size:.75rem;color:var(--muted);margin-bottom:10px;word-break:break-all;}
+.btn-logout{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;padding:9px;border-radius:8px;font-size:.85rem;}
+.btn-logout:hover{background:rgba(255,255,255,.16);color:#fff;}
+
+.main-wrap{margin-left:250px;flex:1;min-height:100vh;display:flex;flex-direction:column;}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar h1{font-size:1.25rem;font-weight:700;margin:0;}
+.topbar .topbar-actions{display:flex;gap:10px;align-items:center;}
+#menuToggle{display:none;background:none;border:none;font-size:1.3rem;margin-right:14px;color:var(--ink);}
+.content{padding:26px 28px 60px;flex:1;}
+.page-section{display:none;}
+.page-section.active{display:block;}
+
+/* Dashboard cards */
+.stat-card{background:var(--card);border-radius:14px;padding:22px;border:1px solid var(--border);display:flex;align-items:center;gap:16px;height:100%;}
+.stat-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+.stat-num{font-size:1.6rem;font-weight:700;line-height:1;}
+.stat-label{color:var(--muted);font-size:.82rem;margin-top:4px;}
+
+.card-panel{background:var(--card);border-radius:14px;border:1px solid var(--border);padding:24px;margin-bottom:22px;}
+.card-panel h5{font-weight:700;margin-bottom:4px;}
+.card-panel .panel-sub{color:var(--muted);font-size:.85rem;margin-bottom:18px;}
+
+.field-group-title{font-weight:700;font-size:1rem;margin:26px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--border);color:var(--primary);}
+.field-group-title:first-child{margin-top:0;}
+.field-row label{font-weight:600;font-size:.82rem;color:#334155;margin-bottom:5px;}
+.field-row .form-control, .field-row textarea{border-radius:8px;border:1px solid var(--border);font-size:.9rem;}
+.field-row{margin-bottom:16px;}
+
+.save-bar{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--border);padding:14px 24px;margin:24px -24px -24px;border-radius:0 0 14px 14px;display:flex;align-items:center;justify-content:flex-end;gap:12px;}
+.save-status{font-size:.82rem;color:var(--success);opacity:0;transition:.3s;}
+.save-status.show{opacity:1;}
+
+table.admin-table{width:100%;border-collapse:collapse;font-size:.88rem;}
+table.admin-table th{text-align:left;color:var(--muted);font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;padding:10px 12px;border-bottom:2px solid var(--border);}
+table.admin-table td{padding:12px;border-bottom:1px solid var(--border);vertical-align:top;}
+table.admin-table tr:last-child td{border-bottom:none;}
+.badge-approved{background:#dcfce7;color:#166534;padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:600;}
+.badge-pending{background:#fef3c7;color:#92400e;padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:600;}
+.stars-sm{color:#f59e0b;font-size:.8rem;}
+.btn-icon{background:none;border:1px solid var(--border);width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:#475569;}
+.btn-icon:hover{background:#f1f5f9;}
+.btn-icon.danger:hover{background:#fee2e2;color:var(--danger);border-color:#fecaca;}
+.status-select{border-radius:7px;border:1px solid var(--border);font-size:.8rem;padding:5px 8px;}
+
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted);}
+.empty-state i{font-size:2.2rem;margin-bottom:12px;opacity:.4;}
+
+/* Live chat layout */
+.chat-admin-wrap{display:flex;gap:0;height:calc(100vh - 200px);min-height:480px;background:var(--card);border-radius:14px;border:1px solid var(--border);overflow:hidden;}
+.chat-list-col{width:300px;border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;}
+.chat-list-item{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:.15s;}
+.chat-list-item:hover{background:#f8fafc;}
+.chat-list-item.active{background:#eff6ff;border-left:3px solid var(--primary);}
+.chat-list-item .cli-name{font-weight:600;font-size:.9rem;}
+.chat-list-item .cli-msg{font-size:.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.chat-list-item .cli-time{font-size:.7rem;color:#cbd5e1;float:right;}
+.chat-conv-col{flex:1;display:flex;flex-direction:column;min-width:0;}
+.chat-conv-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.chat-conv-body{flex:1;padding:18px;overflow-y:auto;background:#f7f9fc;display:flex;flex-direction:column;gap:8px;}
+.chat-conv-msg{display:flex;}
+.chat-conv-msg.from-customer{justify-content:flex-start;}
+.chat-conv-msg.from-admin{justify-content:flex-end;}
+.chat-conv-msg .bubble{max-width:70%;padding:9px 13px;border-radius:14px;font-size:.87rem;line-height:1.4;}
+.chat-conv-msg.from-customer .bubble{background:#eef2ff;border-bottom-left-radius:4px;}
+.chat-conv-msg.from-admin .bubble{background:var(--primary);color:#fff;border-bottom-right-radius:4px;}
+.chat-conv-input{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border);}
+.chat-conv-input input{flex:1;border-radius:999px;border:1px solid var(--border);padding:9px 16px;}
+.online-toggle{font-size:.78rem;display:flex;align-items:center;gap:6px;color:var(--muted);}
+
+@media (max-width:992px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main-wrap{margin-left:0;}
+  #menuToggle{display:inline-block;}
+  .chat-admin-wrap{flex-direction:column;height:auto;}
+  .chat-list-col{width:100%;max-height:220px;border-right:none;border-bottom:1px solid var(--border);}
+}
+
+/* ===== Code Editor / Custom Pages ===== */
+.tf-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;}
+.tf-item-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+.tf-item-card .ti-main{flex:1;min-width:220px;}
+.tf-item-card .ti-title{font-weight:650;font-size:.98rem;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.tf-item-card .ti-meta{font-size:.78rem;color:var(--muted);line-height:1.6;word-break:break-all;}
+.tf-badge{font-size:.68rem;font-weight:600;padding:3px 9px;border-radius:999px;letter-spacing:.2px;}
+.tf-badge.on{background:#dcfce7;color:#166534;}
+.tf-badge.off{background:#f1f5f9;color:#64748b;}
+.tf-badge.menu{background:#eff6ff;color:#1d4ed8;}
+.tf-badge.draft{background:#fef3c7;color:#92400e;}
+.tf-editor{display:none;}
+.tf-editor.open{display:block;}
+.tf-code{font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;font-size:.83rem;line-height:1.55;background:#0f172a;color:#e2e8f0;border:1px solid #1e293b;border-radius:10px;padding:14px 16px;width:100%;min-height:260px;resize:vertical;tab-size:2;white-space:pre;overflow-wrap:normal;overflow-x:auto;}
+.tf-code:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.2);background:#0f172a;color:#e2e8f0;}
+.tf-code.sm{min-height:130px;}
+.tf-lbl{font-weight:600;font-size:.84rem;margin-bottom:6px;display:block;}
+.tf-hint{font-size:.76rem;color:var(--muted);margin-top:6px;}
+.tf-pagepick{display:flex;flex-wrap:wrap;gap:8px;}
+.tf-pagepick label{display:flex;align-items:center;gap:6px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:.83rem;cursor:pointer;margin:0;}
+.tf-pagepick input{margin:0;cursor:pointer;}
+.tf-pagepick label.sel{background:#eff6ff;border-color:var(--primary);color:var(--primary-dark);font-weight:600;}
+.tf-row{margin-bottom:16px;}
+.tf-slugbox{display:flex;align-items:center;gap:0;}
+.tf-slugbox .pfx{background:#f1f5f9;border:1px solid var(--border);border-right:none;border-radius:9px 0 0 9px;padding:9px 12px;font-size:.85rem;color:var(--muted);white-space:nowrap;}
+.tf-slugbox input{border-radius:0 9px 9px 0 !important;}
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN SCREEN ================= -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="brand"><i class="fas fa-laptop-code"></i> TechFix Admin</div>
+    <p class="sub">Sign in to manage your website content, pricing, reviews and messages.</p>
+    <div id="loginError"></div>
+    <form id="loginForm">
+      <label>Email address</label>
+      <input type="email" class="form-control" id="loginEmail" required autocomplete="username">
+      <label>Password</label>
+      <input type="password" class="form-control" id="loginPassword" required autocomplete="current-password">
+      <button type="submit" class="btn-login" id="loginBtn">Sign In</button>
+    </form>
+  </div>
+</div>
+
+<!-- ================= APP SHELL ================= -->
+<div id="appShell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><i class="fas fa-laptop-code"></i> TechFix Admin</div>
+    <nav class="sidebar-nav" id="sidebarNav">
+      <div class="nav-link active" data-section="dashboard"><i class="fas fa-gauge-high"></i> Dashboard</div>
+      <div class="nav-link" data-section="content"><i class="fas fa-file-lines"></i> Site Content</div>
+      <div class="nav-link" data-section="pricing"><i class="fas fa-tags"></i> Pricing</div>
+      <div class="nav-link" data-section="reviews"><i class="fas fa-star"></i> Reviews</div>
+      <div class="nav-link" data-section="appointments"><i class="fas fa-calendar-check"></i> Appointments</div>
+      <div class="nav-link" data-section="messages"><i class="fas fa-envelope"></i> Contact Messages</div>
+      <div class="nav-link" data-section="livechat"><i class="fas fa-comment-dots"></i> Live Chat</div>
+      <div class="nav-link" data-section="codeblocks"><i class="fas fa-code"></i> Code Editor</div>
+      <div class="nav-link" data-section="pages"><i class="fas fa-file-circle-plus"></i> Pages</div>
+      <div class="nav-link" data-section="maintenance" id="navMaintenance"><i class="fas fa-triangle-exclamation"></i> Maintenance Mode <span id="maintNavDot" style="display:none;width:8px;height:8px;border-radius:50%;background:#f87171;margin-left:auto;"></span></div>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="user-email" id="userEmailLabel">—</div>
+      <button class="btn-logout" id="logoutBtn"><i class="fas fa-arrow-right-from-bracket me-2"></i>Sign Out</button>
+    </div>
+  </aside>
+
+  <div class="main-wrap">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;">
+        <button id="menuToggle"><i class="fas fa-bars"></i></button>
+        <h1 id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="topbar-actions">
+        <a href="index.html" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-up-right-from-square me-1"></i> View Site</a>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ===== DASHBOARD ===== -->
+      <section class="page-section active" id="sec-dashboard">
+        <div class="row g-3 mb-2">
+          <div class="col-6 col-md-3">
+            <div class="stat-card"><div class="stat-icon" style="background:#eff6ff;color:var(--primary);"><i class="fas fa-star"></i></div>
+              <div><div class="stat-num" id="statReviews">–</div><div class="stat-label">Total Reviews</div></div></div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;color:var(--warn);"><i class="fas fa-hourglass-half"></i></div>
+              <div><div class="stat-num" id="statPending">–</div><div class="stat-label">Pending Reviews</div></div></div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card"><div class="stat-icon" style="background:#dcfce7;color:var(--success);"><i class="fas fa-calendar-check"></i></div>
+              <div><div class="stat-num" id="statAppointments">–</div><div class="stat-label">Appointments</div></div></div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="stat-card"><div class="stat-icon" style="background:#ede9fe;color:#7c3aed;"><i class="fas fa-envelope"></i></div>
+              <div><div class="stat-num" id="statMessages">–</div><div class="stat-label">Contact Messages</div></div></div>
+          </div>
+        </div>
+        <div class="card-panel mt-3">
+          <h5>Welcome back 👋</h5>
+          <p class="panel-sub mb-0">Use the sidebar to edit your site's text and pricing, moderate reviews, check appointment requests, and reply to live chat — all changes update your live website instantly.</p>
+        </div>
+      </section>
+
+      <!-- ===== SITE CONTENT ===== -->
+      <section class="page-section" id="sec-content">
+        <div class="card-panel">
+          <h5>Site Content</h5>
+          <p class="panel-sub">Edit the text shown across your website. Changes apply the next time a visitor loads (or refreshes) a page.</p>
+          <div id="contentFieldsWrap"></div>
+          <div class="save-bar">
+            <span class="save-status" id="contentSaveStatus"><i class="fas fa-check-circle me-1"></i>Saved</span>
+            <button class="btn btn-primary" id="saveContentBtn"><i class="fas fa-floppy-disk me-2"></i>Save Changes</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== PRICING ===== -->
+      <section class="page-section" id="sec-pricing">
+        <div class="card-panel">
+          <h5>Pricing</h5>
+          <p class="panel-sub">Update your service packages and à la carte prices shown on the Pricing page.</p>
+          <div id="pricingFieldsWrap"></div>
+          <div class="save-bar">
+            <span class="save-status" id="pricingSaveStatus"><i class="fas fa-check-circle me-1"></i>Saved</span>
+            <button class="btn btn-primary" id="savePricingBtn"><i class="fas fa-floppy-disk me-2"></i>Save Changes</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== REVIEWS ===== -->
+      <section class="page-section" id="sec-reviews">
+        <div class="card-panel">
+          <h5>Customer Reviews</h5>
+          <p class="panel-sub">Approve or remove reviews. Only approved reviews appear on your website and homepage slider.</p>
+          <div id="reviewsTableWrap"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading reviews…</p></div></div>
+        </div>
+      </section>
+
+      <!-- ===== APPOINTMENTS ===== -->
+      <section class="page-section" id="sec-appointments">
+        <div class="card-panel">
+          <h5>Appointment Requests</h5>
+          <p class="panel-sub">All bookings submitted through the appointment form.</p>
+          <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-outline-secondary btn-sm" id="rebuildTrackingBtn" title="Creates the public tracking record for older appointments so customers can track them">
+              <i class="fas fa-rotate me-2"></i>Enable tracking for older appointments
+            </button>
+          </div>
+          <div id="appointmentsTableWrap"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading appointments…</p></div></div>
+        </div>
+      </section>
+
+      <!-- ===== MESSAGES ===== -->
+      <section class="page-section" id="sec-messages">
+        <div class="card-panel">
+          <h5>Contact Messages</h5>
+          <p class="panel-sub">Messages submitted through your Contact page form.</p>
+          <div id="messagesTableWrap"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading messages…</p></div></div>
+        </div>
+      </section>
+
+      <!-- ===== LIVE CHAT ===== -->
+      <section class="page-section" id="sec-livechat">
+        <div class="card-panel" style="padding:0;overflow:hidden;">
+          <div style="padding:20px 24px 0;">
+            <h5>Live Chat</h5>
+            <p class="panel-sub">Reply to visitors chatting on your website in real time.</p>
+          </div>
+          <div class="chat-admin-wrap">
+            <div class="chat-list-col" id="chatListCol">
+              <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading chats…</p></div>
+            </div>
+            <div class="chat-conv-col">
+              <div class="chat-conv-head">
+                <div>
+                  <strong id="convName">Select a conversation</strong>
+                  <div class="text-muted" style="font-size:.78rem;" id="convEmail"></div>
+                </div>
+                <label class="online-toggle">
+                  <input type="checkbox" id="adminOnlineToggle"> I'm online for this chat
+                </label>
+              </div>
+              <div class="chat-conv-body" id="convBody">
+                <div class="empty-state"><i class="fas fa-comments"></i><p>Choose a conversation from the list to view messages.</p></div>
+              </div>
+              <div class="chat-conv-input">
+                <input type="text" id="convInput" placeholder="Type your reply..." disabled>
+                <button class="btn btn-primary" id="convSendBtn" disabled><i class="fas fa-paper-plane"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== MAINTENANCE MODE ===== -->
+      <section class="page-section" id="sec-maintenance">
+        <div class="card-panel" id="maintStatusPanel" style="border:2px solid var(--border);">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+              <h5 class="mb-1"><i class="fas fa-power-off me-2"></i>Put website into maintenance mode</h5>
+              <p class="panel-sub mb-0">When turned on, every visitor sees your "We'll be right back" page instead of the site. Turn it off the moment you're done — this switch applies live, no need to save.</p>
+            </div>
+            <div class="form-check form-switch" style="transform:scale(1.5);margin-right:14px;">
+              <input class="form-check-input" type="checkbox" role="switch" id="maintenanceToggle" style="cursor:pointer;">
+            </div>
+          </div>
+          <div id="maintStatusBanner" class="mt-3" style="display:none;padding:12px 16px;border-radius:10px;background:#fee2e2;color:#991b1b;font-weight:600;font-size:.88rem;">
+            <i class="fas fa-triangle-exclamation me-2"></i>Maintenance mode is currently <u>ON</u> — visitors cannot see your website right now.
+          </div>
+        </div>
+
+        <div class="card-panel">
+          <h5>Maintenance Page Content</h5>
+          <p class="panel-sub">Customize what visitors see while maintenance mode is on.</p>
+          <div id="maintenanceFieldsWrap"></div>
+          <div class="save-bar">
+            <span class="save-status" id="maintenanceSaveStatus"><i class="fas fa-check-circle me-1"></i>Saved</span>
+            <button class="btn btn-primary" id="saveMaintenanceBtn"><i class="fas fa-floppy-disk me-2"></i>Save Changes</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== CODE EDITOR (custom code blocks) ===== -->
+      <section class="page-section" id="sec-codeblocks">
+        <div class="card-panel">
+          <div class="tf-toolbar">
+            <div>
+              <h5 class="mb-1"><i class="fas fa-code me-2"></i>Custom Code Blocks</h5>
+              <p class="panel-sub mb-0">Write HTML / CSS / JavaScript and choose exactly where it appears on your website. Each block has its own editor. Changes go live the moment you save.</p>
+            </div>
+            <button class="btn btn-primary" id="newBlockBtn"><i class="fas fa-plus me-2"></i>New Code Block</button>
+          </div>
+          <div id="blocksListWrap"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading…</p></div></div>
+        </div>
+
+        <!-- Block editor -->
+        <div class="card-panel tf-editor" id="blockEditor">
+          <h5 id="blockEditorTitle">New Code Block</h5>
+          <p class="panel-sub">Paste or write your code below. It is injected into the live page exactly as written.</p>
+
+          <div class="tf-row">
+            <label class="tf-lbl">Block name (only you see this)</label>
+            <input type="text" class="form-control" id="blkTitle" placeholder="e.g. Eid offer banner">
+          </div>
+
+          <div class="tf-row">
+            <label class="tf-lbl">Show on which page(s)?</label>
+            <div class="tf-pagepick" id="blkPagePick"></div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 tf-row">
+              <label class="tf-lbl">Where on the page?</label>
+              <select class="form-control" id="blkTarget">
+                <option value="before-footer">Just above the footer (safest)</option>
+                <option value="after-navbar">Right under the top menu</option>
+                <option value="page-end">Very bottom of the page</option>
+                <option value="main-content">Inside custom page content area</option>
+                <option value="custom">Custom position (CSS selector)</option>
+              </select>
+            </div>
+            <div class="col-md-6 tf-row">
+              <label class="tf-lbl">Display order</label>
+              <input type="number" class="form-control" id="blkOrder" value="0">
+              <div class="tf-hint">Lower number shows first when several blocks share a spot.</div>
+            </div>
+          </div>
+
+          <div class="row" id="blkCustomRow" style="display:none;">
+            <div class="col-md-8 tf-row">
+              <label class="tf-lbl">CSS selector of the target element</label>
+              <input type="text" class="form-control" id="blkSelector" placeholder="e.g. .services-section .container">
+            </div>
+            <div class="col-md-4 tf-row">
+              <label class="tf-lbl">Placement</label>
+              <select class="form-control" id="blkPosition">
+                <option value="append">Inside, at the end</option>
+                <option value="prepend">Inside, at the start</option>
+                <option value="before">Before the element</option>
+                <option value="after">After the element</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="tf-row">
+            <label class="tf-lbl">Code (HTML &mdash; &lt;style&gt; and &lt;script&gt; are allowed)</label>
+            <textarea class="tf-code" id="blkCode" spellcheck="false" placeholder="&lt;div class=&quot;container my-5 text-center&quot;&gt;
+  &lt;h2&gt;Special Eid Offer&lt;/h2&gt;
+  &lt;p&gt;20% off on all Windows installation this week.&lt;/p&gt;
+&lt;/div&gt;"></textarea>
+            <div class="tf-hint">Bootstrap 5 and Font Awesome are already loaded on every page, so you can use their classes directly.</div>
+          </div>
+
+          <div class="tf-row">
+            <label style="display:flex;align-items:center;gap:8px;font-size:.88rem;cursor:pointer;">
+              <input type="checkbox" id="blkEnabled" checked> Block is active (visible on the website)
+            </label>
+          </div>
+
+          <div class="save-bar">
+            <span class="save-status" id="blockSaveStatus"><i class="fas fa-check-circle me-1"></i>Saved</span>
+            <button class="btn btn-outline-secondary me-2" id="blockCancelBtn">Cancel</button>
+            <button class="btn btn-primary" id="blockSaveBtn"><i class="fas fa-floppy-disk me-2"></i>Save Block</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== PAGES (create new pages) ===== -->
+      <section class="page-section" id="sec-pages">
+        <div class="card-panel">
+          <div class="tf-toolbar">
+            <div>
+              <h5 class="mb-1"><i class="fas fa-file-circle-plus me-2"></i>Website Pages</h5>
+              <p class="panel-sub mb-0">Create brand new pages by writing their content as code. Every page gets its own web address and can be added to the top menu automatically.</p>
+            </div>
+            <button class="btn btn-primary" id="newPageBtn"><i class="fas fa-plus me-2"></i>New Page</button>
+          </div>
+          <div id="pagesListWrap"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading…</p></div></div>
+        </div>
+
+        <!-- Page editor -->
+        <div class="card-panel tf-editor" id="pageEditor">
+          <h5 id="pageEditorTitle">New Page</h5>
+          <p class="panel-sub">The page uses your site's normal header, menu and footer &mdash; you only write what goes in the middle.</p>
+
+          <div class="row">
+            <div class="col-md-6 tf-row">
+              <label class="tf-lbl">Page title</label>
+              <input type="text" class="form-control" id="pgTitle" placeholder="e.g. About Us">
+            </div>
+            <div class="col-md-6 tf-row">
+              <label class="tf-lbl">Web address (slug)</label>
+              <div class="tf-slugbox">
+                <span class="pfx">/p/</span>
+                <input type="text" class="form-control" id="pgSlug" placeholder="about-us">
+              </div>
+              <div class="tf-hint">Small letters, numbers and dashes only.</div>
+            </div>
+          </div>
+
+          <div class="tf-row">
+            <label class="tf-lbl">Subtitle (shown under the page title)</label>
+            <input type="text" class="form-control" id="pgSubtitle" placeholder="Optional">
+          </div>
+
+          <div class="tf-row">
+            <label class="tf-lbl">Search description (Google / meta description)</label>
+            <textarea class="form-control" id="pgDescription" rows="2" placeholder="Optional short summary for search engines"></textarea>
+          </div>
+
+          <div class="tf-row">
+            <label class="tf-lbl">Page content (HTML &mdash; &lt;style&gt; and &lt;script&gt; are allowed)</label>
+            <textarea class="tf-code" id="pgContent" spellcheck="false" placeholder="&lt;div class=&quot;row&quot;&gt;
+  &lt;div class=&quot;col-lg-8 mx-auto&quot;&gt;
+    &lt;h2&gt;About TechFix&lt;/h2&gt;
+    &lt;p&gt;We have been serving Sakhipur since 2023...&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;"></textarea>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 tf-row">
+              <label class="tf-lbl">Extra CSS (optional)</label>
+              <textarea class="tf-code sm" id="pgCss" spellcheck="false" placeholder=".my-box{ background:#eff6ff; padding:24px; }"></textarea>
+            </div>
+            <div class="col-md-6 tf-row">
+              <label class="tf-lbl">Extra JavaScript (optional)</label>
+              <textarea class="tf-code sm" id="pgJs" spellcheck="false" placeholder="console.log('page ready');"></textarea>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4 tf-row">
+              <label class="tf-lbl">Menu order</label>
+              <input type="number" class="form-control" id="pgOrder" value="0">
+            </div>
+            <div class="col-md-8 tf-row">
+              <label class="tf-lbl">Options</label>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <label style="display:flex;align-items:center;gap:8px;font-size:.88rem;cursor:pointer;margin:0;">
+                  <input type="checkbox" id="pgPublished" checked> Published (visitors can open this page)
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:.88rem;cursor:pointer;margin:0;">
+                  <input type="checkbox" id="pgShowInMenu"> Add a link in the top menu of every page
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:.88rem;cursor:pointer;margin:0;">
+                  <input type="checkbox" id="pgHideHeader"> Hide the blue title banner (full custom design)
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="save-bar">
+            <span class="save-status" id="pageSaveStatus"><i class="fas fa-check-circle me-1"></i>Saved</span>
+            <button class="btn btn-outline-secondary me-2" id="pageCancelBtn">Cancel</button>
+            <button class="btn btn-primary" id="pageSaveBtn"><i class="fas fa-floppy-disk me-2"></i>Save Page</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBEzDwFvrlM7vp3jX49o0P1A8jZwI7dUmI",
+  authDomain: "techfix-4f654.firebaseapp.com",
+  projectId: "techfix-4f654",
+  storageBucket: "techfix-4f654.firebasestorage.app",
+  messagingSenderId: "987309677818",
+  appId: "1:987309677818:web:3897db33da7ca074ef7d43"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+/* =========================================================
+   FIELD REGISTRIES — every editable text/price on the site
+   ========================================================= */
+const CONTENT_FIELDS = [
+  { group: "Global (shown on every page's footer)", key: "global.tagline", label: "Footer tagline", type: "text", def: "Your trusted computer software service provider in Bangladesh since 2023." },
+  { group: "Global (shown on every page's footer)", key: "global.service_area", label: "Service area note (Home, Services & Contact pages)", type: "textarea", def: "We proudly provide service at your office or home in the Sakhipur area." },
+  { group: "Global (shown on every page's footer)", key: "global.address", label: "Address", type: "text", def: "KirtonKhola Poltonpar, Sakhipur,Tangail,Dhaka" },
+  { group: "Global (shown on every page's footer)", key: "global.address_full", label: "Full address (Contact page)", type: "textarea", def: "KirtonKhola Poltonpar, Sakhipur,Tangail<br>Dhaka, Bangladesh" },
+  { group: "Global (shown on every page's footer)", key: "global.phone", label: "Main phone number", type: "text", def: "+880 1876379742" },
+  { group: "Global (shown on every page's footer)", key: "global.phone_display", label: "Main phone (formatted, Contact page)", type: "text", def: "+880 18 76379742" },
+  { group: "Global (shown on every page's footer)", key: "global.email", label: "Email address", type: "text", def: "shamimmd1618@gmail.com" },
+  { group: "Global (shown on every page's footer)", key: "global.hours", label: "Business hours (short)", type: "text", def: "Sat-Thu: 9AM-8PM" },
+  { group: "Global (shown on every page's footer)", key: "global.facebook", label: "Facebook URL", type: "text", def: "https://www.facebook.com/MDSHAMIM1660" },
+  { group: "Global (shown on every page's footer)", key: "global.linkedin", label: "LinkedIn URL", type: "text", def: "https://www.linkedin.com/in/shamim1660/" },
+
+  { group: "Home Page — Hero", key: "home.hero.title", label: "Hero title", type: "text", def: "Professional Software Solutions" },
+  { group: "Home Page — Hero", key: "home.hero.subtitle", label: "Hero subtitle", type: "textarea", def: "Fast and reliable software services for all your computer needs with 24/7 support" },
+
+  { group: "Home Page — Services Section", key: "home.services.windows.title", label: "Card 1 title", type: "text", def: "Windows Installation" },
+  { group: "Home Page — Services Section", key: "home.services.windows.desc", label: "Card 1 description", type: "textarea", def: "Clean installation of all Windows versions with optimized settings and driver support" },
+  { group: "Home Page — Services Section", key: "home.services.software.title", label: "Card 2 title", type: "text", def: "Software Installation" },
+  { group: "Home Page — Services Section", key: "home.services.software.desc", label: "Card 2 description", type: "textarea", def: "Professional installation of any software with proper configuration and licensing" },
+  { group: "Home Page — Services Section", key: "home.services.virus.title", label: "Card 3 title", type: "text", def: "Virus Removal" },
+  { group: "Home Page — Services Section", key: "home.services.virus.desc", label: "Card 3 description", type: "textarea", def: "Complete virus scanning and removal with protection setup and prevention tips" },
+
+  { group: "Home Page — Why Choose Us", key: "home.why.title", label: "Section title", type: "text", def: "Why Choose TechFix?" },
+  { group: "Home Page — Why Choose Us", key: "home.why.f1.title", label: "Feature 1 title", type: "text", def: "Certified Technicians" },
+  { group: "Home Page — Why Choose Us", key: "home.why.f1.desc", label: "Feature 1 description", type: "textarea", def: "Our team consists of Microsoft certified professionals with years of experience." },
+  { group: "Home Page — Why Choose Us", key: "home.why.f2.title", label: "Feature 2 title", type: "text", def: "Quick Response" },
+  { group: "Home Page — Why Choose Us", key: "home.why.f2.desc", label: "Feature 2 description", type: "textarea", def: "Average response time of less than 30 minutes for urgent requests." },
+  { group: "Home Page — Why Choose Us", key: "home.why.f3.title", label: "Feature 3 title", type: "text", def: "Satisfaction Guarantee" },
+  { group: "Home Page — Why Choose Us", key: "home.why.f3.desc", label: "Feature 3 description", type: "textarea", def: "7-day warranty on all services with free follow-up support." },
+  { group: "Home Page — Why Choose Us", key: "home.why.f4.title", label: "Feature 4 title", type: "text", def: "Transparent Pricing" },
+  { group: "Home Page — Why Choose Us", key: "home.why.f4.desc", label: "Feature 4 description", type: "textarea", def: "No hidden fees with upfront pricing before any work begins." },
+
+  { group: "Home Page — Testimonials & Emergency", key: "home.testimonials.title", label: "Testimonials title", type: "text", def: "What Our Clients Say" },
+  { group: "Home Page — Testimonials & Emergency", key: "home.testimonials.subtitle", label: "Testimonials subtitle", type: "text", def: "Trusted by hundreds of satisfied customers" },
+  { group: "Home Page — Testimonials & Emergency", key: "home.emergency.title", label: "Emergency banner title", type: "text", def: "24/7 Emergency Support" },
+  { group: "Home Page — Testimonials & Emergency", key: "home.emergency.text", label: "Emergency banner text", type: "text", def: "For urgent software issues, contact us immediately" },
+
+  { group: "Services Page", key: "services.hero.title", label: "Hero title", type: "text", def: "Our Services" },
+  { group: "Services Page", key: "services.hero.subtitle", label: "Hero subtitle", type: "text", def: "Comprehensive software solutions for all your computer needs" },
+  { group: "Services Page", key: "services.windows.title", label: "Windows Installation — title", type: "text", def: "Windows Installation & Setup" },
+  { group: "Services Page", key: "services.windows.intro", label: "Windows Installation — intro text", type: "textarea", def: "We provide professional Windows installation services for all versions including Windows 10, Windows 11, and older versions if needed. Our service includes:" },
+  { group: "Services Page", key: "services.software.title", label: "Software Installation — title", type: "text", def: "Software Installation & Configuration" },
+  { group: "Services Page", key: "services.software.intro", label: "Software Installation — intro text", type: "textarea", def: "Need specific software installed? We can help with:" },
+  { group: "Services Page", key: "services.virus.title", label: "Virus Removal — title", type: "text", def: "Virus & Malware Removal" },
+  { group: "Services Page", key: "services.virus.intro", label: "Virus Removal — intro text", type: "textarea", def: "Is your computer running slow or showing strange behavior? Our virus removal service includes:" },
+  { group: "Services Page", key: "services.data.title", label: "Data Recovery — title", type: "text", def: "Data Backup & Recovery" },
+  { group: "Services Page", key: "services.data.intro", label: "Data Recovery — intro text", type: "textarea", def: "Lost important files? We can help recover them:" },
+  { group: "Services Page", key: "services.tuneup.title", label: "System Tune-up — title", type: "text", def: "System Tune-up & Optimization" },
+  { group: "Services Page", key: "services.tuneup.intro", label: "System Tune-up — intro text", type: "textarea", def: "Is your computer running slow? Our tune-up service includes:" },
+
+  { group: "Appointment Page", key: "appointment.hero.title", label: "Hero title", type: "text", def: "Book an Appointment" },
+  { group: "Appointment Page", key: "appointment.hero.subtitle", label: "Hero subtitle", type: "text", def: "Fill out the form below to schedule your service" },
+
+  { group: "Reviews Page", key: "reviews.hero.title", label: "Hero title", type: "text", def: "Customer Reviews" },
+  { group: "Reviews Page", key: "reviews.hero.subtitle", label: "Hero subtitle", type: "text", def: "See what our customers say about our services" },
+
+  { group: "Contact Page", key: "contact.hero.title", label: "Hero title", type: "text", def: "Get In Touch" },
+  { group: "Contact Page", key: "contact.hero.subtitle", label: "Hero subtitle", type: "text", def: "We're here to help with all your software needs" },
+  { group: "Contact Page", key: "contact.phone2", label: "Mobile phone number", type: "text", def: "+880 1864287848" },
+  { group: "Contact Page", key: "contact.phone2_display", label: "Mobile phone (formatted)", type: "text", def: "+880 18 64287848" },
+  { group: "Contact Page", key: "contact.hours_block", label: "Business hours (detailed block, HTML allowed)", type: "textarea", def: "Saturday - Thursday: 9:00 AM - 8:00 PM<br>Friday: 3:00 PM - 8:00 PM<br><strong>Emergency support available 24/7</strong>" },
+  { group: "Contact Page", key: "contact.map_embed_url", label: "Google Maps location &mdash; go to Google Maps, find your business, click <b>Share &rarr; Embed a map</b>, then paste the whole code (or just the link) here", type: "textarea", def: "https://www.google.com/maps/embed?pb=!1m28!1m12!1m3!1d7271.181004926809!2d90.20681411066245!3d24.325914855566246!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m13!3e6!4m5!1s0x37560f003a809ddf%3A0x161f957a77830156!2sSS%20COMPUTER'S%2C%20Sakhipur%201951!3m2!1d24.3260613!2d90.21657929999999!4m5!1s0x37560f003a809ddf%3A0x161f957a77830156!2sSS%20COMPUTER'S%2C%20Sakhipur%201951!3m2!1d24.3260613!2d90.21657929999999!5e0!3m2!1sen!2sbd!4v1789364721359!5m2!1sen!2sbd" },
+
+  { group: "Terms of Service Page", key: "tos.title", label: "Page title", type: "text", def: "Terms of Service" },
+  { group: "Terms of Service Page", key: "tos.term1", label: "Term 1 (HTML allowed)", type: "textarea", def: "<strong>Service Scope:</strong> Our services cover Windows installation, repair, and optimization. We don't provide hardware replacement or physical repair services." },
+  { group: "Terms of Service Page", key: "tos.term2", label: "Term 2 (HTML allowed)", type: "textarea", def: "<strong>Data Responsibility:</strong> While we take all reasonable precautions, we're not responsible for data loss. You must back up your data before service begins." },
+  { group: "Terms of Service Page", key: "tos.term3", label: "Term 3 (HTML allowed)", type: "textarea", def: "<strong>Pricing:</strong> Quoted prices are estimates only. Final cost depends on actual work required and will be communicated before proceeding." },
+  { group: "Terms of Service Page", key: "tos.term4", label: "Term 4 (HTML allowed)", type: "textarea", def: "<strong>Warranty:</strong> 7-day warranty on labor for the same issue. Does not cover new issues or problems caused by user actions after service." },
+  { group: "Terms of Service Page", key: "tos.term5", label: "Term 5 (HTML allowed)", type: "textarea", def: "<strong>Cancellation Policy:</strong> Cancel or reschedule at least 2 hours before your appointment to avoid cancellation fees (50% of quoted price)." },
+  { group: "Terms of Service Page", key: "tos.term6", label: "Term 6 (HTML allowed)", type: "textarea", def: "<strong>Remote Access:</strong> For remote services, you grant us temporary access to your system which will be terminated after service completion." },
+  { group: "Terms of Service Page", key: "tos.term7", label: "Term 7 (HTML allowed)", type: "textarea", def: "<strong>Payment Terms:</strong> Payment is due when service is completed. We accept cash, bKash, Nagad, and major credit cards. Late payments incur 2% monthly interest." },
+  { group: "Terms of Service Page", key: "tos.term8", label: "Term 8 (HTML allowed)", type: "textarea", def: "<strong>Limitation of Liability:</strong> Our maximum liability is limited to the amount paid for the service. We are not liable for consequential damages." },
+];
+
+const MAINTENANCE_FIELDS = [
+  { group: "Maintenance Page Text", key: "maintenance.badge", label: "Status badge text", type: "text", def: "Maintenance in progress" },
+  { group: "Maintenance Page Text", key: "maintenance.title", label: "Heading", type: "text", def: "We'll Be Right Back" },
+  { group: "Maintenance Page Text", key: "maintenance.message", label: "Main message", type: "textarea", def: "Our website is currently undergoing some improvements. We're working hard to make your experience faster, better, and more reliable." },
+  { group: "Maintenance Page Text", key: "maintenance.footer", label: "Footer note", type: "text", def: "We apologize for the temporary inconvenience. ❤️" },
+];
+
+const PRICING_FIELDS = [
+  { group: "Pricing Page — Hero", key: "pricing.hero.title", label: "Hero title", type: "text", def: "Transparent Pricing" },
+  { group: "Pricing Page — Hero", key: "pricing.hero.subtitle", label: "Hero subtitle", type: "text", def: "Affordable solutions for all your software needs" },
+
+  { group: "Package: Basic Fix", key: "pricing.pkg.basic.name", label: "Package name", type: "text", def: "Basic Fix" },
+  { group: "Package: Basic Fix", key: "pricing.pkg.basic.price", label: "Price (HTML allowed, e.g. ৳300<span>-৳1300</span>)", type: "text", def: "৳300<span>-৳1300</span>" },
+  { group: "Package: Basic Fix", key: "pricing.pkg.basic.desc", label: "Short description", type: "text", def: "Simple software solutions" },
+
+  { group: "Package: Standard Repair", key: "pricing.pkg.standard.name", label: "Package name", type: "text", def: "Standard Repair" },
+  { group: "Package: Standard Repair", key: "pricing.pkg.standard.price", label: "Price (HTML allowed)", type: "text", def: "৳999<span>-৳3000</span>" },
+  { group: "Package: Standard Repair", key: "pricing.pkg.standard.desc", label: "Short description", type: "text", def: "Comprehensive software service" },
+
+  { group: "Package: Premium Care", key: "pricing.pkg.premium.name", label: "Package name", type: "text", def: "Premium Care" },
+  { group: "Package: Premium Care", key: "pricing.pkg.premium.price", label: "Price (HTML allowed)", type: "text", def: "৳2500<span>-৳5000</span>" },
+  { group: "Package: Premium Care", key: "pricing.pkg.premium.desc", label: "Short description", type: "text", def: "Complete system solution" },
+
+  { group: "À La Carte: Windows Installation", key: "pricing.item.windows.name", label: "Name", type: "text", def: "Windows Installation" },
+  { group: "À La Carte: Windows Installation", key: "pricing.item.windows.desc", label: "Description", type: "text", def: "Clean installation with basic drivers" },
+  { group: "À La Carte: Windows Installation", key: "pricing.item.windows.price", label: "Price range", type: "text", def: "৳499 - ৳900" },
+
+  { group: "À La Carte: Software Installation", key: "pricing.item.software.name", label: "Name", type: "text", def: "Software Installation" },
+  { group: "À La Carte: Software Installation", key: "pricing.item.software.desc", label: "Description", type: "text", def: "Per software installation" },
+  { group: "À La Carte: Software Installation", key: "pricing.item.software.price", label: "Price range", type: "text", def: "৳100 - ৳500" },
+
+  { group: "À La Carte: Virus Removal", key: "pricing.item.virus.name", label: "Name", type: "text", def: "Virus Removal" },
+  { group: "À La Carte: Virus Removal", key: "pricing.item.virus.desc", label: "Description", type: "text", def: "Complete scanning and cleaning" },
+  { group: "À La Carte: Virus Removal", key: "pricing.item.virus.price", label: "Price range", type: "text", def: "৳499 - ৳999" },
+
+  { group: "À La Carte: Data Recovery", key: "pricing.item.data.name", label: "Name", type: "text", def: "Data Recovery" },
+  { group: "À La Carte: Data Recovery", key: "pricing.item.data.desc", label: "Description", type: "text", def: "Basic file recovery" },
+  { group: "À La Carte: Data Recovery", key: "pricing.item.data.price", label: "Price range", type: "text", def: "৳499 - ৳2000" },
+
+  { group: "À La Carte: Driver Installation", key: "pricing.item.driver.name", label: "Name", type: "text", def: "Driver Installation" },
+  { group: "À La Carte: Driver Installation", key: "pricing.item.driver.desc", label: "Description", type: "text", def: "All necessary drivers" },
+  { group: "À La Carte: Driver Installation", key: "pricing.item.driver.price", label: "Price range", type: "text", def: "৳299 - ৳600" },
+
+  { group: "À La Carte: System Tune-up", key: "pricing.item.tuneup.name", label: "Name", type: "text", def: "System Tune-up" },
+  { group: "À La Carte: System Tune-up", key: "pricing.item.tuneup.desc", label: "Description", type: "text", def: "Performance optimization" },
+  { group: "À La Carte: System Tune-up", key: "pricing.item.tuneup.price", label: "Price range", type: "text", def: "৳500 - ৳1000" },
+];
+
+let siteContentCache = {};
+
+/* =========================================================
+   AUTH
+   ========================================================= */
+const loginScreen = document.getElementById('loginScreen');
+const appShell = document.getElementById('appShell');
+const loginForm = document.getElementById('loginForm');
+const loginError = document.getElementById('loginError');
+const loginBtn = document.getElementById('loginBtn');
+
+loginForm.addEventListener('submit', function(e){
+  e.preventDefault();
+  loginError.style.display = 'none';
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'Signing in...';
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPassword').value;
+  auth.signInWithEmailAndPassword(email, pass).catch(function(err){
+    loginError.textContent = err.message || 'Sign in failed. Please check your credentials.';
+    loginError.style.display = 'block';
+  }).finally(function(){
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Sign In';
+  });
+});
+
+document.getElementById('logoutBtn').addEventListener('click', function(){
+  auth.signOut();
+});
+
+auth.onAuthStateChanged(function(user){
+  if(user){
+    loginScreen.style.display = 'none';
+    appShell.style.display = 'flex';
+    document.getElementById('userEmailLabel').textContent = user.email;
+    initAdminApp();
+  } else {
+    loginScreen.style.display = 'flex';
+    appShell.style.display = 'none';
+  }
+});
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+const sectionTitles = {
+  dashboard: 'Dashboard', content: 'Site Content', pricing: 'Pricing',
+  reviews: 'Customer Reviews', appointments: 'Appointment Requests',
+  messages: 'Contact Messages', livechat: 'Live Chat', maintenance: 'Maintenance Mode',
+  codeblocks: 'Code Editor', pages: 'Website Pages'
+};
+document.querySelectorAll('#sidebarNav .nav-link').forEach(function(link){
+  link.addEventListener('click', function(){
+    document.querySelectorAll('#sidebarNav .nav-link').forEach(function(l){ l.classList.remove('active'); });
+    link.classList.add('active');
+    const sec = link.getAttribute('data-section');
+    document.querySelectorAll('.page-section').forEach(function(s){ s.classList.remove('active'); });
+    document.getElementById('sec-' + sec).classList.add('active');
+    document.getElementById('pageTitle').textContent = sectionTitles[sec];
+    document.getElementById('sidebar').classList.remove('open');
+  });
+});
+document.getElementById('menuToggle').addEventListener('click', function(){
+  document.getElementById('sidebar').classList.toggle('open');
+});
+
+/* =========================================================
+   BOOT — runs once after login
+   ========================================================= */
+let adminAppBooted = false;
+function initAdminApp(){
+  if(adminAppBooted) return;
+  adminAppBooted = true;
+  loadSiteContentAndRenderForms();
+  loadDashboardStats();
+  loadReviews();
+  loadAppointments();
+  loadMessages();
+  loadLiveChats();
+  watchMaintenanceStatus();
+  loadCustomBlocks();
+  loadCustomPages();
+}
+
+/* =========================================================
+   SITE CONTENT + PRICING FORMS
+   ========================================================= */
+function renderFields(fields, containerId){
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = '';
+  let currentGroup = null;
+  fields.forEach(function(f){
+    if(f.group !== currentGroup){
+      currentGroup = f.group;
+      const h = document.createElement('div');
+      h.className = 'field-group-title';
+      h.textContent = currentGroup;
+      wrap.appendChild(h);
+    }
+    const row = document.createElement('div');
+    row.className = 'field-row';
+    const val = (siteContentCache[f.key] !== undefined) ? siteContentCache[f.key] : f.def;
+    const inputEl = f.type === 'textarea' ? 'textarea rows="2"' : 'input type="text"';
+    row.innerHTML = '<label>' + f.label + '</label>' +
+      '<' + inputEl + ' class="form-control cms-field" data-key="' + f.key + '">' + (f.type === 'textarea' ? escapeHtml(val) : '') + '</' + (f.type === 'textarea' ? 'textarea' : 'input') + '>';
+    wrap.appendChild(row);
+    if(f.type !== 'textarea'){
+      row.querySelector('.cms-field').value = val;
+    }
+  });
+}
+
+function escapeHtml(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function loadSiteContentAndRenderForms(){
+  db.collection('siteContent').doc('main').get().then(function(doc){
+    siteContentCache = doc.exists ? doc.data() : {};
+    renderFields(CONTENT_FIELDS, 'contentFieldsWrap');
+    renderFields(PRICING_FIELDS, 'pricingFieldsWrap');
+    renderFields(MAINTENANCE_FIELDS, 'maintenanceFieldsWrap');
+  }).catch(function(err){
+    console.error(err);
+    siteContentCache = {};
+    renderFields(CONTENT_FIELDS, 'contentFieldsWrap');
+    renderFields(PRICING_FIELDS, 'pricingFieldsWrap');
+    renderFields(MAINTENANCE_FIELDS, 'maintenanceFieldsWrap');
+  });
+}
+
+function saveFields(containerId, statusId){
+  const wrap = document.getElementById(containerId);
+  const data = {};
+  wrap.querySelectorAll('.cms-field').forEach(function(el){
+    data[el.getAttribute('data-key')] = el.value;
+  });
+  return db.collection('siteContent').doc('main').set(data, { merge: true }).then(function(){
+    Object.assign(siteContentCache, data);
+    const status = document.getElementById(statusId);
+    status.classList.add('show');
+    setTimeout(function(){ status.classList.remove('show'); }, 2500);
+  });
+}
+
+document.getElementById('saveContentBtn').addEventListener('click', function(){
+  saveFields('contentFieldsWrap', 'contentSaveStatus').catch(function(err){ alert('Save failed: ' + err.message); });
+});
+document.getElementById('savePricingBtn').addEventListener('click', function(){
+  saveFields('pricingFieldsWrap', 'pricingSaveStatus').catch(function(err){ alert('Save failed: ' + err.message); });
+});
+document.getElementById('saveMaintenanceBtn').addEventListener('click', function(){
+  saveFields('maintenanceFieldsWrap', 'maintenanceSaveStatus').catch(function(err){ alert('Save failed: ' + err.message); });
+});
+
+/* =========================================================
+   MAINTENANCE MODE — live on/off switch
+   ========================================================= */
+let maintenanceListenerAttached = false;
+function watchMaintenanceStatus(){
+  if(maintenanceListenerAttached) return;
+  maintenanceListenerAttached = true;
+  db.collection('siteContent').doc('main').onSnapshot(function(doc){
+    const d = doc.exists ? doc.data() : {};
+    const isOn = d['maintenance.enabled'] === true;
+    const toggle = document.getElementById('maintenanceToggle');
+    if(document.activeElement !== toggle) toggle.checked = isOn;
+    document.getElementById('maintStatusBanner').style.display = isOn ? 'block' : 'none';
+    document.getElementById('maintStatusPanel').style.borderColor = isOn ? '#fca5a5' : 'var(--border)';
+    document.getElementById('maintNavDot').style.display = isOn ? 'inline-block' : 'none';
+  });
+}
+document.getElementById('maintenanceToggle').addEventListener('change', function(){
+  const checked = this.checked;
+  if(checked && !confirm('Turn ON maintenance mode? Your live website will show the maintenance page to all visitors until you turn this off.')){
+    this.checked = false;
+    return;
+  }
+  db.collection('siteContent').doc('main').set({ 'maintenance.enabled': checked }, { merge: true }).catch(function(err){
+    alert('Could not update maintenance mode: ' + err.message);
+  });
+});
+
+/* =========================================================
+   DASHBOARD STATS
+   ========================================================= */
+function loadDashboardStats(){
+  db.collection('reviews').get().then(function(snap){
+    document.getElementById('statReviews').textContent = snap.size;
+    let pending = 0;
+    snap.forEach(function(d){ if(!d.data().approved) pending++; });
+    document.getElementById('statPending').textContent = pending;
+  }).catch(function(){});
+  db.collection('appointments').get().then(function(snap){
+    document.getElementById('statAppointments').textContent = snap.size;
+  }).catch(function(){});
+  db.collection('contacts').get().then(function(snap){
+    document.getElementById('statMessages').textContent = snap.size;
+  }).catch(function(){});
+}
+
+/* =========================================================
+   REVIEWS
+   ========================================================= */
+function loadReviews(){
+  db.collection('reviews').orderBy('date', 'desc').get().then(renderReviews).catch(function(){
+    db.collection('reviews').get().then(renderReviews).catch(function(err){
+      document.getElementById('reviewsTableWrap').innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><p>Could not load reviews.</p></div>';
+    });
+  });
+}
+function renderReviews(snap){
+  const wrap = document.getElementById('reviewsTableWrap');
+  if(snap.empty){
+    wrap.innerHTML = '<div class="empty-state"><i class="fas fa-star"></i><p>No reviews yet.</p></div>';
+    return;
+  }
+  let rows = '';
+  snap.forEach(function(doc){
+    const r = doc.data();
+    const id = doc.id;
+    const date = r.date && r.date.toDate ? r.date.toDate().toLocaleDateString() : '—';
+    let stars = '';
+    for(let i=1;i<=5;i++){ stars += '<i class="fa' + (i<=(r.rating||0)?'s':'r') + ' fa-star"></i>'; }
+    rows += '<tr>' +
+      '<td><strong>' + escapeHtml(r.name||'—') + '</strong><br><span class="text-muted" style="font-size:.78rem;">' + escapeHtml(r.email||'') + '</span></td>' +
+      '<td>' + escapeHtml(r.service||'—') + '</td>' +
+      '<td class="stars-sm">' + stars + '</td>' +
+      '<td style="max-width:280px;">' + escapeHtml(r.review||'') + '</td>' +
+      '<td>' + date + '</td>' +
+      '<td>' + (r.approved ? '<span class="badge-approved">Approved</span>' : '<span class="badge-pending">Pending</span>') + '</td>' +
+      '<td style="white-space:nowrap;">' +
+        '<button class="btn-icon me-1 btn-approve-toggle" data-id="' + id + '" data-approved="' + (r.approved ? '1' : '0') + '" title="' + (r.approved?'Unapprove':'Approve') + '"><i class="fas fa-' + (r.approved?'eye-slash':'check') + '"></i></button>' +
+        '<button class="btn-icon danger btn-review-delete" data-id="' + id + '" title="Delete"><i class="fas fa-trash"></i></button>' +
+      '</td>' +
+    '</tr>';
+  });
+  wrap.innerHTML = '<div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Customer</th><th>Service</th><th>Rating</th><th>Review</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+document.getElementById('reviewsTableWrap').addEventListener('click', function(e){
+  const approveBtn = e.target.closest('.btn-approve-toggle');
+  if(approveBtn){
+    const id = approveBtn.getAttribute('data-id');
+    const isApproved = approveBtn.getAttribute('data-approved') === '1';
+    db.collection('reviews').doc(id).update({ approved: !isApproved }).then(loadReviews).then(loadDashboardStats);
+    return;
+  }
+  const delBtn = e.target.closest('.btn-review-delete');
+  if(delBtn){
+    if(!confirm('Delete this review? This cannot be undone.')) return;
+    db.collection('reviews').doc(delBtn.getAttribute('data-id')).delete().then(loadReviews).then(loadDashboardStats);
+  }
+});
+
+/* =========================================================
+   APPOINTMENTS
+   ========================================================= */
+function loadAppointments(){
+  db.collection('appointments').orderBy('timestamp', 'desc').get().then(renderAppointments).catch(function(){
+    db.collection('appointments').get().then(renderAppointments).catch(function(){
+      document.getElementById('appointmentsTableWrap').innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><p>Could not load appointments.</p></div>';
+    });
+  });
+}
+function renderAppointments(snap){
+  const wrap = document.getElementById('appointmentsTableWrap');
+  if(snap.empty){
+    wrap.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-check"></i><p>No appointment requests yet.</p></div>';
+    return;
+  }
+  let rows = '';
+  snap.forEach(function(doc){
+    const a = doc.data();
+    const id = doc.id;
+    const submitted = a.timestamp && a.timestamp.toDate ? a.timestamp.toDate().toLocaleString() : '—';
+    const status = a.status || 'New';
+    rows += '<tr>' +
+      '<td><strong>' + escapeHtml(a.referenceNumber||'—') + '</strong><br><span class="text-muted" style="font-size:.75rem;">' + submitted + '</span></td>' +
+      '<td>' + escapeHtml(a.name||'—') + '<br><span class="text-muted" style="font-size:.78rem;">' + escapeHtml(a.phone||'') + ' · ' + escapeHtml(a.email||'') + '</span></td>' +
+      '<td>' + escapeHtml(a.serviceType||'—') + '<br><span class="text-muted" style="font-size:.78rem;">' + escapeHtml(a.serviceOption||'') + '</span></td>' +
+      '<td>' + escapeHtml(a.appointmentDate||'—') + '<br><span class="text-muted" style="font-size:.78rem;">' + escapeHtml(a.appointmentTime||'') + '</span></td>' +
+      '<td style="max-width:220px;">' + escapeHtml(a.problemDetails||'—') + '</td>' +
+      '<td><select class="status-select appt-status-select" data-id="' + id + '" data-ref="' + escapeHtml(a.referenceNumber||'') + '">' +
+        ['New','Contacted','Completed','Cancelled'].map(function(s){ return '<option value="' + s + '" ' + (s===status?'selected':'') + '>' + s + '</option>'; }).join('') +
+      '</select></td>' +
+    '</tr>';
+  });
+  wrap.innerHTML = '<div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Reference</th><th>Contact</th><th>Service</th><th>Preferred Time</th><th>Notes</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+document.getElementById('appointmentsTableWrap').addEventListener('change', function(e){
+  const sel = e.target.closest('.appt-status-select');
+  if(!sel) return;
+  const id = sel.getAttribute('data-id');
+  const ref = sel.getAttribute('data-ref') || '';
+  db.collection('appointments').doc(id).update({ status: sel.value }).then(function(){
+    // Mirror the status into the public tracking record so the customer's
+    // "Track My Appointment" result stays accurate.
+    if(ref) return db.collection('appointmentTracking').doc(ref).set({ status: sel.value }, { merge: true });
+  }).catch(function(err){ alert('Could not update status: ' + err.message); });
+});
+
+/* Rebuild public tracking records for appointments booked before this system
+   existed (safe to run more than once — it never overwrites a status). */
+function rebuildTrackingRecords(){
+  const btn = document.getElementById('rebuildTrackingBtn');
+  btn.disabled = true;
+  const original = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Working…';
+  db.collection('appointments').get().then(function(snap){
+    const jobs = [];
+    snap.forEach(function(d){
+      const a = d.data() || {};
+      if(!a.referenceNumber) return;
+      const digits = (a.phone || '').replace(/\D/g, '');
+      jobs.push(db.collection('appointmentTracking').doc(a.referenceNumber).set({
+        referenceNumber: a.referenceNumber,
+        name: a.name || '',
+        serviceType: a.serviceType || '',
+        serviceOption: a.serviceOption || '',
+        appointmentDate: a.appointmentDate || '',
+        appointmentTime: a.appointmentTime || '',
+        status: a.status || 'New',
+        phoneLast4: digits.slice(-4)
+      }, { merge: true }));
+    });
+    return Promise.all(jobs).then(function(){
+      alert('Done — ' + jobs.length + ' appointment(s) can now be tracked by customers.');
+    });
+  }).catch(function(err){
+    alert('Rebuild failed: ' + err.message);
+  }).finally(function(){
+    btn.disabled = false;
+    btn.innerHTML = original;
+  });
+}
+document.getElementById('rebuildTrackingBtn').addEventListener('click', rebuildTrackingRecords);
+
+/* =========================================================
+   CONTACT MESSAGES
+   ========================================================= */
+function loadMessages(){
+  db.collection('contacts').orderBy('timestamp', 'desc').get().then(renderMessages).catch(function(){
+    db.collection('contacts').get().then(renderMessages).catch(function(){
+      document.getElementById('messagesTableWrap').innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><p>Could not load messages.</p></div>';
+    });
+  });
+}
+function renderMessages(snap){
+  const wrap = document.getElementById('messagesTableWrap');
+  if(snap.empty){
+    wrap.innerHTML = '<div class="empty-state"><i class="fas fa-envelope"></i><p>No contact messages yet.</p></div>';
+    return;
+  }
+  let rows = '';
+  snap.forEach(function(doc){
+    const m = doc.data();
+    const date = m.timestamp && m.timestamp.toDate ? m.timestamp.toDate().toLocaleString() : '—';
+    rows += '<tr>' +
+      '<td>' + date + '</td>' +
+      '<td><strong>' + escapeHtml(m.name||'—') + '</strong><br><a href="mailto:' + escapeHtml(m.email||'') + '" style="font-size:.78rem;">' + escapeHtml(m.email||'') + '</a></td>' +
+      '<td>' + escapeHtml(m.subject||'—') + '</td>' +
+      '<td style="max-width:320px;">' + escapeHtml(m.message||'') + '</td>' +
+      '<td><a class="btn btn-sm btn-outline-primary" href="mailto:' + escapeHtml(m.email||'') + '?subject=Re: ' + encodeURIComponent(m.subject||'Your message') + '"><i class="fas fa-reply"></i></a></td>' +
+    '</tr>';
+  });
+  wrap.innerHTML = '<div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Date</th><th>From</th><th>Subject</th><th>Message</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+
+/* =========================================================
+   LIVE CHAT
+   ========================================================= */
+let activeChatId = null;
+let chatMsgsUnsub = null;
+let chatStatusUnsub = null;
+
+function loadLiveChats(){
+  db.collection('live_chats').orderBy('lastUpdated', 'desc').onSnapshot(function(snap){
+    const col = document.getElementById('chatListCol');
+    if(snap.empty){
+      col.innerHTML = '<div class="empty-state"><i class="fas fa-comments"></i><p>No conversations yet.</p></div>';
+      return;
+    }
+    let html = '';
+    snap.forEach(function(doc){
+      const c = doc.data();
+      const time = c.lastUpdated && c.lastUpdated.toDate ? c.lastUpdated.toDate().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+      html += '<div class="chat-list-item' + (doc.id===activeChatId?' active':'') + '" data-id="' + doc.id + '" data-name="' + escapeHtml(c.name||'Guest') + '" data-email="' + escapeHtml(c.email||'') + '">' +
+        '<span class="cli-time">' + time + '</span>' +
+        '<div class="cli-name">' + escapeHtml(c.name||'Guest') + '</div>' +
+        '<div class="cli-msg">' + escapeHtml(c.lastMessage||'') + '</div>' +
+      '</div>';
+    });
+    col.innerHTML = html;
+  }, function(){
+    document.getElementById('chatListCol').innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><p>Could not load chats.</p></div>';
+  });
+}
+document.getElementById('chatListCol').addEventListener('click', function(e){
+  const item = e.target.closest('.chat-list-item');
+  if(item){
+    openAdminChat(item.getAttribute('data-id'), item.getAttribute('data-name'), item.getAttribute('data-email'));
+  }
+});
+
+function openAdminChat(id, name, email){
+  activeChatId = id;
+  document.getElementById('convName').textContent = name || 'Guest';
+  document.getElementById('convEmail').textContent = email || '';
+  document.getElementById('convInput').disabled = false;
+  document.getElementById('convSendBtn').disabled = false;
+
+  document.querySelectorAll('.chat-list-item').forEach(function(el){ el.classList.remove('active'); });
+  loadLiveChats(); // re-render list to reflect active highlight (cheap, uses cached snapshot listener)
+
+  if(chatMsgsUnsub) chatMsgsUnsub();
+  if(chatStatusUnsub) chatStatusUnsub();
+
+  const toggle = document.getElementById('adminOnlineToggle');
+  chatStatusUnsub = db.collection('live_chats').doc(id).onSnapshot(function(doc){
+    const d = doc.data() || {};
+    toggle.checked = !!d.adminOnline;
+  });
+
+  const body = document.getElementById('convBody');
+  body.innerHTML = '';
+  chatMsgsUnsub = db.collection('live_chats').doc(id).collection('messages').orderBy('timestamp', 'asc')
+    .onSnapshot(function(snap){
+      body.innerHTML = '';
+      snap.forEach(function(doc){
+        const m = doc.data();
+        const cls = m.sender === 'customer' ? 'from-customer' : 'from-admin';
+        const time = m.timestamp && m.timestamp.toDate ? m.timestamp.toDate().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+        body.innerHTML += '<div class="chat-conv-msg ' + cls + '"><div class="bubble">' + escapeHtml(m.message) + '<div style="font-size:.68rem;opacity:.6;margin-top:3px;">' + escapeHtml(m.name||m.sender) + ' · ' + time + '</div></div></div>';
+      });
+      body.scrollTop = body.scrollHeight;
+    });
+}
+
+document.getElementById('adminOnlineToggle').addEventListener('change', function(){
+  if(!activeChatId) return;
+  db.collection('live_chats').doc(activeChatId).set({ adminOnline: this.checked }, { merge: true });
+});
+
+function sendAdminReply(){
+  const input = document.getElementById('convInput');
+  const text = input.value.trim();
+  if(!text || !activeChatId) return;
+  input.value = '';
+  db.collection('live_chats').doc(activeChatId).collection('messages').add({
+    sender: 'admin', name: 'TechFix Support', message: text, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  db.collection('live_chats').doc(activeChatId).set({
+    lastMessage: text, lastUpdated: firebase.firestore.FieldValue.serverTimestamp(), adminOnline: true
+  }, { merge: true });
+  document.getElementById('adminOnlineToggle').checked = true;
+}
+document.getElementById('convSendBtn').addEventListener('click', sendAdminReply);
+document.getElementById('convInput').addEventListener('keydown', function(e){ if(e.key==='Enter') sendAdminReply(); });
+
+/* =========================================================
+   CODE EDITOR — custom code blocks  (collection: customBlocks)
+   ========================================================= */
+const BUILTIN_PAGES = [
+  { id: 'all',         label: 'All pages' },
+  { id: 'index',       label: 'Home' },
+  { id: 'services',    label: 'Services' },
+  { id: 'pricing',     label: 'Pricing' },
+  { id: 'appointment', label: 'Appointment' },
+  { id: 'reviews',     label: 'Reviews' },
+  { id: 'contact',     label: 'Contact' }
+];
+
+let customBlocksCache = [];
+let customPagesCache  = [];
+let editingBlockId    = null;
+let editingPageId     = null;
+
+function pageLabelFor(id){
+  const b = BUILTIN_PAGES.find(function(p){ return p.id === id; });
+  if(b) return b.label;
+  if(id.indexOf('p:') === 0){
+    const slug = id.slice(2);
+    const cp = customPagesCache.find(function(p){ return p.slug === slug; });
+    return (cp && cp.title) ? cp.title : ('/p/' + slug);
+  }
+  return id;
+}
+
+function renderPagePicker(selected){
+  const wrap = document.getElementById('blkPagePick');
+  const opts = BUILTIN_PAGES.slice();
+  customPagesCache.forEach(function(p){
+    if(p.slug) opts.push({ id: 'p:' + p.slug, label: (p.title || p.slug) + ' (custom)' });
+  });
+  wrap.innerHTML = '';
+  opts.forEach(function(o){
+    const on = selected.indexOf(o.id) > -1;
+    const lbl = document.createElement('label');
+    lbl.className = on ? 'sel' : '';
+    lbl.innerHTML = '<input type="checkbox" value="' + o.id + '"' + (on ? ' checked' : '') + '> ' + escapeHtml(o.label);
+    wrap.appendChild(lbl);
+  });
+  wrap.querySelectorAll('input').forEach(function(cb){
+    cb.addEventListener('change', function(){
+      cb.parentNode.className = cb.checked ? 'sel' : '';
+      if(cb.value === 'all' && cb.checked){
+        wrap.querySelectorAll('input').forEach(function(o){
+          if(o !== cb){ o.checked = false; o.parentNode.className = ''; }
+        });
+      } else if(cb.checked){
+        const allCb = wrap.querySelector('input[value="all"]');
+        if(allCb){ allCb.checked = false; allCb.parentNode.className = ''; }
+      }
+    });
+  });
+}
+
+function loadCustomBlocks(){
+  db.collection('customBlocks').onSnapshot(function(snap){
+    customBlocksCache = [];
+    snap.forEach(function(d){ const o = d.data() || {}; o.id = d.id; customBlocksCache.push(o); });
+    customBlocksCache.sort(function(a,b){ return (a.order||0) - (b.order||0); });
+    renderBlocksList();
+  }, function(err){
+    document.getElementById('blocksListWrap').innerHTML =
+      '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><p>Could not load code blocks.</p></div>';
+  });
+}
+
+const TARGET_LABELS = {
+  'before-footer': 'Above the footer',
+  'after-navbar': 'Under the top menu',
+  'page-end': 'Bottom of page',
+  'main-content': 'Custom page content area',
+  'custom': 'Custom position'
+};
+
+function renderBlocksList(){
+  const wrap = document.getElementById('blocksListWrap');
+  if(!customBlocksCache.length){
+    wrap.innerHTML = '<div class="empty-state"><i class="fas fa-code"></i><p>No code blocks yet. Click <strong>New Code Block</strong> to write your first one.</p></div>';
+    return;
+  }
+  let html = '';
+  customBlocksCache.forEach(function(b){
+    const pages = (b.pages || []).map(pageLabelFor).join(', ') || '—';
+    const where = TARGET_LABELS[b.target] || b.target || '—';
+    const sel = b.target === 'custom' && b.selector ? (' → <code>' + escapeHtml(b.selector) + '</code>') : '';
+    html += '<div class="tf-item-card">' +
+      '<div class="ti-main">' +
+        '<div class="ti-title">' + escapeHtml(b.title || 'Untitled block') +
+          '<span class="tf-badge ' + (b.enabled === false ? 'off' : 'on') + '">' + (b.enabled === false ? 'Inactive' : 'Active') + '</span>' +
+        '</div>' +
+        '<div class="ti-meta"><i class="fas fa-file me-1"></i>' + escapeHtml(pages) + '<br>' +
+        '<i class="fas fa-location-dot me-1"></i>' + where + sel + '</div>' +
+      '</div>' +
+      '<div>' +
+        '<button class="btn-icon me-1 blk-edit" data-id="' + b.id + '" title="Edit"><i class="fas fa-pen"></i></button>' +
+        '<button class="btn-icon me-1 blk-toggle" data-id="' + b.id + '" title="Turn on/off"><i class="fas fa-' + (b.enabled === false ? 'eye' : 'eye-slash') + '"></i></button>' +
+        '<button class="btn-icon danger blk-del" data-id="' + b.id + '" title="Delete"><i class="fas fa-trash"></i></button>' +
+      '</div>' +
+    '</div>';
+  });
+  wrap.innerHTML = html;
+
+  wrap.querySelectorAll('.blk-edit').forEach(function(btn){
+    btn.addEventListener('click', function(){ openBlockEditor(btn.getAttribute('data-id')); });
+  });
+  wrap.querySelectorAll('.blk-toggle').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const b = customBlocksCache.find(function(x){ return x.id === btn.getAttribute('data-id'); });
+      db.collection('customBlocks').doc(b.id).set({ enabled: b.enabled === false }, { merge: true });
+    });
+  });
+  wrap.querySelectorAll('.blk-del').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      if(!confirm('Delete this code block permanently?')) return;
+      db.collection('customBlocks').doc(btn.getAttribute('data-id')).delete();
+    });
+  });
+}
+
+function openBlockEditor(id){
+  editingBlockId = id || null;
+  const b = id ? customBlocksCache.find(function(x){ return x.id === id; }) : null;
+  document.getElementById('blockEditorTitle').textContent = b ? 'Edit Code Block' : 'New Code Block';
+  document.getElementById('blkTitle').value    = b ? (b.title || '') : '';
+  document.getElementById('blkTarget').value   = b ? (b.target || 'before-footer') : 'before-footer';
+  document.getElementById('blkSelector').value = b ? (b.selector || '') : '';
+  document.getElementById('blkPosition').value = b ? (b.position || 'append') : 'append';
+  document.getElementById('blkOrder').value    = b ? (b.order || 0) : 0;
+  document.getElementById('blkCode').value     = b ? (b.code || '') : '';
+  document.getElementById('blkEnabled').checked = b ? (b.enabled !== false) : true;
+  renderPagePicker(b ? (b.pages || []) : ['all']);
+  toggleBlkCustomRow();
+  document.getElementById('blockEditor').classList.add('open');
+  document.getElementById('blockEditor').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleBlkCustomRow(){
+  document.getElementById('blkCustomRow').style.display =
+    document.getElementById('blkTarget').value === 'custom' ? 'flex' : 'none';
+}
+
+document.getElementById('blkTarget').addEventListener('change', toggleBlkCustomRow);
+document.getElementById('newBlockBtn').addEventListener('click', function(){ openBlockEditor(null); });
+document.getElementById('blockCancelBtn').addEventListener('click', function(){
+  document.getElementById('blockEditor').classList.remove('open');
+  editingBlockId = null;
+});
+
+document.getElementById('blockSaveBtn').addEventListener('click', function(){
+  const pages = [];
+  document.querySelectorAll('#blkPagePick input:checked').forEach(function(cb){ pages.push(cb.value); });
+  if(!pages.length){ alert('Please choose at least one page for this block.'); return; }
+
+  const data = {
+    title: document.getElementById('blkTitle').value.trim() || 'Untitled block',
+    pages: pages,
+    target: document.getElementById('blkTarget').value,
+    selector: document.getElementById('blkSelector').value.trim(),
+    position: document.getElementById('blkPosition').value,
+    order: parseInt(document.getElementById('blkOrder').value, 10) || 0,
+    code: document.getElementById('blkCode').value,
+    enabled: document.getElementById('blkEnabled').checked,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  if(data.target === 'custom' && !data.selector){
+    alert('Please enter a CSS selector for the custom position.');
+    return;
+  }
+
+  const p = editingBlockId
+    ? db.collection('customBlocks').doc(editingBlockId).set(data, { merge: true })
+    : db.collection('customBlocks').add(data);
+
+  p.then(function(){
+    const st = document.getElementById('blockSaveStatus');
+    st.classList.add('show');
+    setTimeout(function(){ st.classList.remove('show'); }, 2500);
+    document.getElementById('blockEditor').classList.remove('open');
+    editingBlockId = null;
+  }).catch(function(err){ alert('Save failed: ' + err.message); });
+});
+
+/* =========================================================
+   PAGES — create new website pages  (collection: customPages)
+   ========================================================= */
+function slugify(s){
+  return (s || '').toString().toLowerCase().trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function loadCustomPages(){
+  db.collection('customPages').onSnapshot(function(snap){
+    customPagesCache = [];
+    snap.forEach(function(d){ const o = d.data() || {}; o.id = d.id; customPagesCache.push(o); });
+    customPagesCache.sort(function(a,b){ return (a.order||0) - (b.order||0); });
+    renderPagesList();
+    if(document.getElementById('blockEditor').classList.contains('open')){
+      const sel = [];
+      document.querySelectorAll('#blkPagePick input:checked').forEach(function(cb){ sel.push(cb.value); });
+      renderPagePicker(sel);
+    }
+  }, function(err){
+    document.getElementById('pagesListWrap').innerHTML =
+      '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><p>Could not load pages.</p></div>';
+  });
+}
+
+function renderPagesList(){
+  const wrap = document.getElementById('pagesListWrap');
+  if(!customPagesCache.length){
+    wrap.innerHTML = '<div class="empty-state"><i class="fas fa-file-circle-plus"></i><p>No custom pages yet. Click <strong>New Page</strong> to create one.</p></div>';
+    return;
+  }
+  let html = '';
+  customPagesCache.forEach(function(p){
+    html += '<div class="tf-item-card">' +
+      '<div class="ti-main">' +
+        '<div class="ti-title">' + escapeHtml(p.title || 'Untitled page') +
+          '<span class="tf-badge ' + (p.published === false ? 'draft' : 'on') + '">' + (p.published === false ? 'Draft' : 'Published') + '</span>' +
+          (p.showInMenu ? '<span class="tf-badge menu">In menu</span>' : '') +
+        '</div>' +
+        '<div class="ti-meta"><i class="fas fa-link me-1"></i>/p/' + escapeHtml(p.slug || '') + '</div>' +
+      '</div>' +
+      '<div>' +
+        '<a class="btn-icon me-1" href="/p/' + encodeURIComponent(p.slug || '') + '" target="_blank" title="View"><i class="fas fa-arrow-up-right-from-square"></i></a>' +
+        '<button class="btn-icon me-1 pg-edit" data-id="' + p.id + '" title="Edit"><i class="fas fa-pen"></i></button>' +
+        '<button class="btn-icon danger pg-del" data-id="' + p.id + '" title="Delete"><i class="fas fa-trash"></i></button>' +
+      '</div>' +
+    '</div>';
+  });
+  wrap.innerHTML = html;
+
+  wrap.querySelectorAll('.pg-edit').forEach(function(btn){
+    btn.addEventListener('click', function(){ openPageEditor(btn.getAttribute('data-id')); });
+  });
+  wrap.querySelectorAll('.pg-del').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      if(!confirm('Delete this page permanently? Its web address will stop working.')) return;
+      db.collection('customPages').doc(btn.getAttribute('data-id')).delete();
+    });
+  });
+}
+
+function openPageEditor(id){
+  editingPageId = id || null;
+  const p = id ? customPagesCache.find(function(x){ return x.id === id; }) : null;
+  document.getElementById('pageEditorTitle').textContent = p ? 'Edit Page' : 'New Page';
+  document.getElementById('pgTitle').value       = p ? (p.title || '') : '';
+  document.getElementById('pgSlug').value        = p ? (p.slug || '') : '';
+  document.getElementById('pgSubtitle').value    = p ? (p.subtitle || '') : '';
+  document.getElementById('pgDescription').value = p ? (p.description || '') : '';
+  document.getElementById('pgContent').value     = p ? (p.content || '') : '';
+  document.getElementById('pgCss').value         = p ? (p.css || '') : '';
+  document.getElementById('pgJs').value          = p ? (p.js || '') : '';
+  document.getElementById('pgOrder').value       = p ? (p.order || 0) : 0;
+  document.getElementById('pgPublished').checked  = p ? (p.published !== false) : true;
+  document.getElementById('pgShowInMenu').checked = p ? (p.showInMenu === true) : false;
+  document.getElementById('pgHideHeader').checked = p ? (p.hideHeader === true) : false;
+  document.getElementById('pageEditor').classList.add('open');
+  document.getElementById('pageEditor').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+document.getElementById('newPageBtn').addEventListener('click', function(){ openPageEditor(null); });
+document.getElementById('pageCancelBtn').addEventListener('click', function(){
+  document.getElementById('pageEditor').classList.remove('open');
+  editingPageId = null;
+});
+document.getElementById('pgTitle').addEventListener('input', function(){
+  const slugField = document.getElementById('pgSlug');
+  if(!editingPageId && !slugField.dataset.touched) slugField.value = slugify(this.value);
+});
+document.getElementById('pgSlug').addEventListener('input', function(){
+  this.dataset.touched = '1';
+});
+
+document.getElementById('pageSaveBtn').addEventListener('click', function(){
+  const title = document.getElementById('pgTitle').value.trim();
+  const slug  = slugify(document.getElementById('pgSlug').value);
+  if(!title){ alert('Please enter a page title.'); return; }
+  if(!slug){ alert('Please enter a valid web address (slug).'); return; }
+
+  const clash = customPagesCache.find(function(x){ return x.slug === slug && x.id !== editingPageId; });
+  if(clash){ alert('Another page already uses the address /p/' + slug + '. Please choose a different one.'); return; }
+
+  const data = {
+    title: title,
+    slug: slug,
+    subtitle: document.getElementById('pgSubtitle').value.trim(),
+    description: document.getElementById('pgDescription').value.trim(),
+    content: document.getElementById('pgContent').value,
+    css: document.getElementById('pgCss').value,
+    js: document.getElementById('pgJs').value,
+    order: parseInt(document.getElementById('pgOrder').value, 10) || 0,
+    published: document.getElementById('pgPublished').checked,
+    showInMenu: document.getElementById('pgShowInMenu').checked,
+    hideHeader: document.getElementById('pgHideHeader').checked,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  const p = editingPageId
+    ? db.collection('customPages').doc(editingPageId).set(data, { merge: true })
+    : db.collection('customPages').add(data);
+
+  p.then(function(){
+    const st = document.getElementById('pageSaveStatus');
+    st.classList.add('show');
+    setTimeout(function(){ st.classList.remove('show'); }, 2500);
+    document.getElementById('pageEditor').classList.remove('open');
+    editingPageId = null;
+    document.getElementById('pgSlug').dataset.touched = '';
+  }).catch(function(err){ alert('Save failed: ' + err.message); });
+});
+
+/* Tab key inserts two spaces inside code editors instead of leaving the field */
+document.querySelectorAll('.tf-code').forEach(function(ta){
+  ta.addEventListener('keydown', function(e){
+    if(e.key !== 'Tab') return;
+    e.preventDefault();
+    const s = this.selectionStart, en = this.selectionEnd;
+    this.value = this.value.substring(0, s) + '  ' + this.value.substring(en);
+    this.selectionStart = this.selectionEnd = s + 2;
+  });
+});
+
+</script>
+</body>
+</html>

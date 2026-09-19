@@ -1,0 +1,166 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------
+    function isAdmin() {
+      return request.auth != null
+             && request.auth.token.email == 'shamimmd1618@gmail.com';
+    }
+
+    // Keeps spam submissions from filling up your database.
+    function sane(maxFields) {
+      return request.resource.data.size() <= maxFields;
+    }
+
+    function shortText(field, maxLen) {
+      return !(field in request.resource.data)
+             || (request.resource.data[field] is string
+                 && request.resource.data[field].size() <= maxLen);
+    }
+
+    // ---------------------------------------------------------------
+    // Site text, pricing & maintenance mode
+    // ---------------------------------------------------------------
+    match /siteContent/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // Custom code blocks written in the Admin "Code Editor"
+    // ---------------------------------------------------------------
+    match /customBlocks/{blockId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // Custom pages created in the Admin "Pages" section
+    // ---------------------------------------------------------------
+    match /customPages/{pageId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // Customer reviews
+    // Reviews are auto-approved on submission (matches the site's current
+    // behavior). Only an admin can edit or delete one afterward.
+    // ---------------------------------------------------------------
+    match /reviews/{reviewId} {
+      allow read: if isAdmin() || resource.data.approved == true;
+
+      allow create: if request.resource.data.approved == true
+                    && request.resource.data.rating is number
+                    && request.resource.data.rating >= 1
+                    && request.resource.data.rating <= 5
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() > 0
+                    && request.resource.data.name.size() <= 80
+                    && shortText('email', 120)
+                    && shortText('service', 80)
+                    && shortText('review', 2000)
+                    && sane(8);
+
+      allow update, delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // Appointment requests — private. Contains phone, email and notes,
+    // so only you can ever read them.
+    // ---------------------------------------------------------------
+    match /appointments/{apptId} {
+      allow create: if shortText('name', 100)
+                    && shortText('email', 120)
+                    && shortText('phone', 30)
+                    && shortText('serviceType', 80)
+                    && shortText('serviceOption', 80)
+                    && shortText('appointmentDate', 40)
+                    && shortText('appointmentTime', 40)
+                    && shortText('problemDetails', 3000)
+                    && shortText('referenceNumber', 40)
+                    && sane(12);
+
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // Public "Track My Appointment" records.
+    // One small document per booking, named after its reference number.
+    // It holds NO phone number, email, address or notes — only the last
+    // 4 phone digits, used to check that the visitor owns the booking.
+    //
+    //   get   -> allowed: you must already know the exact reference number
+    //   list  -> blocked: nobody can browse or download them all
+    // ---------------------------------------------------------------
+    match /appointmentTracking/{referenceNumber} {
+      allow get: if true;
+      allow list: if isAdmin();
+
+      allow create: if request.resource.data.referenceNumber == referenceNumber
+                    && shortText('name', 100)
+                    && shortText('phoneLast4', 4)
+                    && shortText('serviceType', 80)
+                    && shortText('serviceOption', 80)
+                    && shortText('appointmentDate', 40)
+                    && shortText('appointmentTime', 40)
+                    && shortText('status', 30)
+                    && !('phone' in request.resource.data)
+                    && !('email' in request.resource.data)
+                    && !('problemDetails' in request.resource.data)
+                    && sane(9);
+
+      allow update, delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // Contact form messages — private, same as appointments.
+    // ---------------------------------------------------------------
+    match /contacts/{msgId} {
+      allow create: if shortText('name', 100)
+                    && shortText('email', 120)
+                    && shortText('phone', 30)
+                    && shortText('subject', 200)
+                    && shortText('message', 5000)
+                    && sane(10);
+
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // Live chat.
+    // A visitor keeps their own chat ID in their browser, so "get" is open
+    // but "list" is blocked — otherwise anyone could download every
+    // conversation on your site.
+    // ---------------------------------------------------------------
+    match /live_chats/{chatId} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create: if shortText('name', 100)
+                    && shortText('email', 120)
+                    && shortText('lastMessage', 2000)
+                    && sane(8);
+      allow update: if isAdmin()
+                    || (shortText('name', 100)
+                        && shortText('email', 120)
+                        && shortText('lastMessage', 2000)
+                        // a visitor must not change the "admin is online" flag
+                        // (on a merge write the flag is still present, so we
+                        // compare it instead of forbidding it outright)
+                        && request.resource.data.adminOnline == resource.data.adminOnline);
+      allow delete: if isAdmin();
+
+      match /messages/{messageId} {
+        allow read: if true;
+        allow create: if shortText('name', 100)
+                      && shortText('message', 2000)
+                      && request.resource.data.sender in ['customer', 'bot', 'admin']
+                      && sane(6);
+        allow update, delete: if isAdmin();
+      }
+    }
+  }
+}

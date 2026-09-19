@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Admin area – not for search engines
+Disallow: /login-admin.html
+Disallow: /login-admin
+
+# Dynamic page template (real pages are served at /p/<slug>)
+Disallow: /page.html
+
+Sitemap: https://techfix24.netlify.app/sitemap.xml
