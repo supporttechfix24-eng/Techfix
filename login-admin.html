@@ -486,9 +486,23 @@ table.admin-table tr:last-child td{border-bottom:none;}
             <input type="text" class="form-control" id="pgSubtitle" placeholder="Optional">
           </div>
 
+          <div class="row">
+            <div class="col-md-8 tf-row">
+              <label class="tf-lbl">Search description (Google / meta description)</label>
+              <textarea class="form-control" id="pgDescription" rows="2" placeholder="Optional short summary for search engines"></textarea>
+            </div>
+            <div class="col-md-4 tf-row">
+              <label class="tf-lbl">Browser tab / SEO title (optional)</label>
+              <input type="text" class="form-control" id="pgMetaTitle" placeholder="Leave blank to use Page title">
+              <div class="tf-hint">Shown in the browser tab and search results instead of the Page title above, if filled in.</div>
+            </div>
+          </div>
+
           <div class="tf-row">
-            <label class="tf-lbl">Search description (Google / meta description)</label>
-            <textarea class="form-control" id="pgDescription" rows="2" placeholder="Optional short summary for search engines"></textarea>
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="pgNoindex">
+              <label class="form-check-label" for="pgNoindex">Hide this page from Google &amp; other search engines</label>
+            </div>
           </div>
 
           <div class="tf-row">
@@ -1406,6 +1420,8 @@ function openPageEditor(id){
   document.getElementById('pgSlug').value        = p ? (p.slug || '') : '';
   document.getElementById('pgSubtitle').value    = p ? (p.subtitle || '') : '';
   document.getElementById('pgDescription').value = p ? (p.description || '') : '';
+  document.getElementById('pgMetaTitle').value   = p ? (p.metaTitle || '') : '';
+  document.getElementById('pgNoindex').checked   = p ? (p.noindex === true) : false;
   document.getElementById('pgContent').value     = p ? (p.content || '') : '';
   document.getElementById('pgCss').value         = p ? (p.css || '') : '';
   document.getElementById('pgJs').value          = p ? (p.js || '') : '';
@@ -1444,6 +1460,8 @@ document.getElementById('pageSaveBtn').addEventListener('click', function(){
     slug: slug,
     subtitle: document.getElementById('pgSubtitle').value.trim(),
     description: document.getElementById('pgDescription').value.trim(),
+    metaTitle: document.getElementById('pgMetaTitle').value.trim(),
+    noindex: document.getElementById('pgNoindex').checked,
     content: document.getElementById('pgContent').value,
     css: document.getElementById('pgCss').value,
     js: document.getElementById('pgJs').value,

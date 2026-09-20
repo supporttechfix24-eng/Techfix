@@ -1065,53 +1065,58 @@ try {
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
           };
           
-          // Save the full request (admin-only readable)
-          await db.collection("appointments").add(formData);
-
-          // Save a small, public-safe copy used by "Track My Appointment".
-          // It deliberately contains NO phone, email, address or notes —
-          // only the last 4 phone digits, used to verify the visitor.
+          // Save the full request (admin-only readable) and the small
+          // public-safe tracking copy at the same time — they don't depend
+          // on each other, so there's no reason to wait for one before
+          // starting the other.
           const phoneDigits = formData.phone.replace(/\D/g, '');
-          await db.collection("appointmentTracking").doc(refNum).set({
-            referenceNumber: refNum,
-            name: formData.name,
-            serviceType: formData.serviceType,
-            serviceOption: formData.serviceOption,
-            appointmentDate: formData.appointmentDate,
-            appointmentTime: formData.appointmentTime,
-            status: 'New',
-            phoneLast4: phoneDigits.slice(-4),
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          });
+          await Promise.all([
+            db.collection("appointments").add(formData),
+            db.collection("appointmentTracking").doc(refNum).set({
+              referenceNumber: refNum,
+              name: formData.name,
+              serviceType: formData.serviceType,
+              serviceOption: formData.serviceOption,
+              appointmentDate: formData.appointmentDate,
+              appointmentTime: formData.appointmentTime,
+              status: 'New',
+              phoneLast4: phoneDigits.slice(-4),
+              timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            })
+          ]);
+
+          // Show the success confirmation immediately — the booking is
+          // already safely saved above, so the customer shouldn't have to
+          // wait for anything else.
+          referenceNumber.textContent = refNum;
+          form.style.display = 'none';
+          confirmation.style.display = 'block';
+          confirmation.scrollIntoView({ behavior: 'smooth' });
 
           // Send the English confirmation email via the secure server-side
           // Netlify Function (English only, even on this Bangla page — do
           // not translate it). The appointment and its Track/Support ID
           // (refNum) are already saved above. If the email fails for any
           // reason, we do NOT roll back, regenerate, or change the
-          // appointment/ID — we just log it and let the normal success
-          // confirmation below show the customer their existing ID.
-          try {
-            const emailResp = await fetch('/.netlify/functions/send-confirmation-email', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                name: formData.name,
-                email: formData.email,
-                trackId: refNum
-              })
-            });
+          // appointment/ID — this runs in the background and never blocks
+          // or delays the confirmation shown to the customer above.
+          fetch('/.netlify/functions/send-confirmation-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: formData.name,
+              email: formData.email,
+              trackId: refNum
+            })
+          }).then(function(emailResp) {
             if (!emailResp.ok) {
-              console.error('Confirmation email failed to send for', refNum, await emailResp.text());
+              emailResp.text().then(function(t) {
+                console.error('Confirmation email failed to send for', refNum, t);
+              });
             }
-          } catch (emailError) {
+          }).catch(function(emailError) {
             console.error('Confirmation email request failed for', refNum, emailError);
-          }
-
-          referenceNumber.textContent = refNum;
-          form.style.display = 'none';
-          confirmation.style.display = 'block';
-          confirmation.scrollIntoView({ behavior: 'smooth' });
+          });
         } catch (error) {
           console.error("Error adding document: ", error);
           alert("আপনার অ্যাপয়েন্টমেন্ট জমা দিতে সমস্যা হয়েছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।");
