@@ -12,9 +12,11 @@
 //   SMTP_PASS
 //   SMTP_FROM
 //
-// The appointment tracking page URL can optionally be overridden with
-// TRACK_URL; otherwise it defaults to the existing English appointment page
-// where the "Track My Appointment" panel already lives.
+// Optional:
+//   TRACK_URL
+//
+// If TRACK_URL is not provided, the function uses the existing
+// TechFix appointment tracking panel URL.
 
 const nodemailer = require('nodemailer');
 
@@ -37,6 +39,7 @@ function buildEmail({ name, trackId }) {
 
   const subject = `TechFix Appointment Confirmation – ${trackId}`;
 
+  // Plain-text version
   const text =
     `Hello ${name || 'Customer'},\n\n` +
     `Your appointment request has been successfully received by TechFix.\n\n` +
@@ -45,91 +48,312 @@ function buildEmail({ name, trackId }) {
     `You can use your Track/Support ID to check your appointment status anytime:\n` +
     `${TRACK_URL}\n\n` +
     `Thank you for choosing TechFix.\n\n` +
-    `TechFix\n` +
-    `Sakhipur, Tangail`;
+    `TechFix – Computer & Software Services\n` +
+    `Sakhipur, Tangail, Bangladesh\n` +
+    `Email: support.techfix24@gmail.com\n` +
+    `Website: https://techfix24.netlify.app\n\n` +
+    `Reliable • Professional • Trusted`;
 
+  // HTML version
   const html = `
-  <div style="font-family: Arial, Helvetica, sans-serif; max-width: 480px; margin: 0 auto; color: #222;">
-    <h2 style="color: #0d6efd; margin-bottom: 4px;">TechFix Appointment Confirmation</h2>
-    <p>Hello ${safeName},</p>
-    <p>Your appointment request has been successfully received by TechFix.</p>
-    <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
-      <tr>
-        <td style="padding: 6px 0; color: #555;">Track/Support ID</td>
-        <td style="padding: 6px 0; font-weight: bold;">${safeId}</td>
-      </tr>
-      <tr>
-        <td style="padding: 6px 0; color: #555;">Status</td>
-        <td style="padding: 6px 0;">
-          <span style="background:#fff3cd;color:#664d03;padding:2px 10px;border-radius:12px;font-size:13px;">Pending</span>
-        </td>
-      </tr>
-    </table>
-    <p>You can use your Track/Support ID to check your appointment status anytime.</p>
-    <p style="text-align: center; margin: 24px 0;">
-      <a href="${TRACK_URL}"
-         style="background:#0d6efd;color:#fff;text-decoration:none;padding:12px 24px;border-radius:6px;display:inline-block;font-weight:bold;">
-        Track My Appointment
-      </a>
-    </p>
-    <p>Thank you for choosing TechFix.</p>
-    <p style="margin-top: 24px; color: #555;">
-      TechFix<br>
-      Sakhipur, Tangail
-    </p>
-  </div>`;
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechFix Appointment Confirmation</title>
+  </head>
+
+  <body style="margin:0; padding:0; background:#f5f7fa; font-family:Arial, Helvetica, sans-serif; color:#222;">
+
+    <div style="width:100%; padding:30px 12px; box-sizing:border-box;">
+
+      <div style="
+        max-width:520px;
+        margin:0 auto;
+        background:#ffffff;
+        border-radius:10px;
+        padding:30px;
+        box-sizing:border-box;
+        border:1px solid #e5e7eb;
+      ">
+
+        <!-- Header -->
+        <h2 style="
+          color:#0d6efd;
+          margin:0 0 20px;
+          font-size:22px;
+          line-height:1.3;
+        ">
+          TechFix Appointment Confirmation
+        </h2>
+
+        <!-- Greeting -->
+        <p style="margin:0 0 16px; font-size:15px; line-height:1.6;">
+          Hello ${safeName},
+        </p>
+
+        <p style="margin:0 0 20px; font-size:15px; line-height:1.6;">
+          Your appointment request has been successfully received by TechFix.
+        </p>
+
+        <!-- Appointment Details -->
+        <table style="
+          width:100%;
+          border-collapse:collapse;
+          margin:16px 0 20px;
+          font-size:14px;
+        ">
+          <tr>
+            <td style="
+              padding:8px 0;
+              color:#555;
+              width:55%;
+            ">
+              Track/Support ID
+            </td>
+
+            <td style="
+              padding:8px 0;
+              font-weight:bold;
+              color:#222;
+            ">
+              ${safeId}
+            </td>
+          </tr>
+
+          <tr>
+            <td style="
+              padding:8px 0;
+              color:#555;
+            ">
+              Status
+            </td>
+
+            <td style="padding:8px 0;">
+              <span style="
+                background:#fff3cd;
+                color:#664d03;
+                padding:4px 10px;
+                border-radius:12px;
+                font-size:13px;
+                display:inline-block;
+              ">
+                Pending
+              </span>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Tracking Information -->
+        <p style="
+          margin:0 0 22px;
+          font-size:14px;
+          line-height:1.6;
+          color:#444;
+        ">
+          You can use your Track/Support ID to check your appointment status anytime.
+        </p>
+
+        <!-- Track Button -->
+        <p style="
+          text-align:center;
+          margin:26px 0;
+        ">
+          <a
+            href="${TRACK_URL}"
+            style="
+              background:#0d6efd;
+              color:#ffffff;
+              text-decoration:none;
+              padding:13px 26px;
+              border-radius:6px;
+              display:inline-block;
+              font-weight:bold;
+              font-size:14px;
+            "
+          >
+            Track My Appointment
+          </a>
+        </p>
+
+        <!-- Thank You -->
+        <p style="
+          margin:24px 0 0;
+          font-size:14px;
+          line-height:1.6;
+        ">
+          Thank you for choosing TechFix.
+        </p>
+
+        <!-- Professional Footer -->
+        <div style="
+          margin-top:28px;
+          padding-top:18px;
+          border-top:1px solid #e5e7eb;
+          color:#555;
+          font-size:13px;
+          line-height:1.7;
+        ">
+
+          <strong style="
+            color:#222;
+            font-size:15px;
+          ">
+            TechFix
+          </strong>
+
+          <br>
+
+          Computer &amp; Software Services
+
+          <br>
+
+          Sakhipur, Tangail, Bangladesh
+
+          <br>
+
+          <a
+            href="mailto:support.techfix24@gmail.com"
+            style="
+              color:black;
+              text-decoration:none;
+            "
+          >
+            support.techfix24@gmail.com
+          </a>
+
+          <br>
+
+          <a
+            href="https://techfix24.netlify.app"
+            style="
+              color:black;
+              text-decoration:none;
+            "
+          >
+            techfix24.netlify.app
+          </a>
+
+          <p style="
+            margin:12px 0 0;
+            color:#777;
+            font-size:12px;
+          ">
+            Reliable &bull; Professional &bull; Trusted
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </body>
+  </html>
+  `;
 
   return { subject, text, html };
 }
 
 exports.handler = async function (event) {
+  // Only POST requests are allowed
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
+    return {
+      statusCode: 405,
+      body: 'Method Not Allowed',
+    };
   }
 
+  // Parse request body
   let payload;
+
   try {
     payload = JSON.parse(event.body || '{}');
   } catch (err) {
-    return { statusCode: 400, body: JSON.stringify({ success: false, error: 'Invalid JSON body' }) };
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        success: false,
+        error: 'Invalid JSON body',
+      }),
+    };
   }
 
   const { name, email, trackId } = payload;
 
-  // Basic validation. The Track/Support ID must already exist — this
-  // function never creates one.
+  // Basic validation.
+  // The Track/Support ID must already exist.
+  // This function never creates or changes the ID.
   if (!email || !trackId) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ success: false, error: 'Missing required fields: email and trackId are required.' }),
+      body: JSON.stringify({
+        success: false,
+        error: 'Missing required fields: email and trackId are required.',
+      }),
     };
   }
 
-  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM } = process.env;
+  // Read SMTP configuration from Netlify environment variables
+  const {
+    SMTP_HOST,
+    SMTP_PORT,
+    SMTP_USER,
+    SMTP_PASS,
+    SMTP_FROM,
+  } = process.env;
 
-  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !SMTP_FROM) {
-    // Fail safely: never expose which var is missing to the client, just log
-    // server-side for debugging. The appointment itself is unaffected.
-    console.error('send-confirmation-email: SMTP environment variables are not fully configured.');
+  // Check required environment variables
+  if (
+    !SMTP_HOST ||
+    !SMTP_PORT ||
+    !SMTP_USER ||
+    !SMTP_PASS ||
+    !SMTP_FROM
+  ) {
+    // Never expose which environment variable is missing to the client.
+    console.error(
+      'send-confirmation-email: SMTP environment variables are not fully configured.'
+    );
+
     return {
       statusCode: 500,
-      body: JSON.stringify({ success: false, error: 'Email service is not configured.' }),
+      body: JSON.stringify({
+        success: false,
+        error: 'Email service is not configured.',
+      }),
     };
   }
 
   try {
+    // Create SMTP transporter
     const transporter = nodemailer.createTransport({
       host: SMTP_HOST,
       port: Number(SMTP_PORT),
-      secure: Number(SMTP_PORT) === 465, // true for port 465, false for 587/others
+
+      // Gmail:
+      // 465 = SSL/TLS
+      // 587 = STARTTLS
+      secure: Number(SMTP_PORT) === 465,
+
       auth: {
         user: SMTP_USER,
         pass: SMTP_PASS,
       },
     });
 
-    const { subject, text, html } = buildEmail({ name, trackId });
+    // Build email
+    const {
+      subject,
+      text,
+      html,
+    } = buildEmail({
+      name,
+      trackId,
+    });
 
+    // Send email
     await transporter.sendMail({
       from: SMTP_FROM,
       to: email,
@@ -138,12 +362,28 @@ exports.handler = async function (event) {
       html,
     });
 
-    return { statusCode: 200, body: JSON.stringify({ success: true }) };
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        success: true,
+      }),
+    };
+
   } catch (error) {
-    // Log safely server-side. The appointment has already been saved by the
-    // caller before this function is invoked, so a failure here must never
-    // roll back or duplicate the appointment or its Track/Support ID.
-    console.error('send-confirmation-email: failed to send email for trackId', trackId, error);
-    return { statusCode: 500, body: JSON.stringify({ success: false, error: 'Failed to send email.' }) };
+    // Log safely on server side.
+    // Appointment data is not changed or rolled back.
+    console.error(
+      'send-confirmation-email: failed to send email for trackId',
+      trackId,
+      error
+    );
+
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        success: false,
+        error: 'Failed to send email.',
+      }),
+    };
   }
 };
