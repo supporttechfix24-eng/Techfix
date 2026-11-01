@@ -129,8 +129,33 @@
         a.href = '/p/' + p.slug;
         a.textContent = p.title || p.slug;
         li.appendChild(a);
-        navs[n].appendChild(li);
+        // keep the "English | বাংলা" switcher as the last item: insert before it
+        var langItem = navs[n].querySelector('li.tf-lang-item');
+        if (langItem) navs[n].insertBefore(li, langItem);
+        else navs[n].appendChild(li);
       });
+    }
+  }
+
+  /* ---------- "Downloads" menu link (shown only when there is a published file) ---------- */
+  function renderDownloadsLink(hasItems) {
+    var old = document.querySelectorAll('li[data-tf-dl]');
+    for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
+    if (!hasItems) return;
+    var bn = location.pathname.toLowerCase().indexOf('/bn/') === 0;
+    var navs = document.querySelectorAll('ul.navbar-nav');
+    for (var n = 0; n < navs.length; n++) {
+      var li = document.createElement('li');
+      li.className = 'nav-item';
+      li.setAttribute('data-tf-dl', '1');
+      var a = document.createElement('a');
+      a.className = 'nav-link' + (PAGE_ID === 'downloads' ? ' active' : '');
+      a.href = bn ? '/bn/downloads' : '/downloads';
+      a.textContent = bn ? 'ডাউনলোড' : 'Downloads';
+      li.appendChild(a);
+      var langItem = navs[n].querySelector('li.tf-lang-item');
+      if (langItem) navs[n].insertBefore(li, langItem);
+      else navs[n].appendChild(li);
     }
   }
 
@@ -151,6 +176,13 @@
       });
       renderBlocks(arr);
     }, function (err) { console.warn('Custom blocks skipped', err); });
+
+    db.collection('downloads').onSnapshot(function (snap) {
+      var any = false;
+      snap.forEach(function (d) { var o = d.data() || {}; if (o.published !== false && o.url) any = true; });
+      window.TF_HAS_DOWNLOADS = any;
+      renderDownloadsLink(any);
+    }, function () { /* downloads rules not published yet — ignore */ });
 
     db.collection('customPages').onSnapshot(function (snap) {
       var arr = [];

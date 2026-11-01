@@ -8,6 +8,7 @@
 /bn/appointment.html   /bn/appointment   301
 /bn/reviews.html       /bn/reviews       301
 /bn/contact.html       /bn/contact       301
+/bn/downloads.html     /bn/downloads     301
 
 # Anything else that doesn't match a real file or the rule above
 # shows the branded 404 page (instead of Netlify's default error screen)

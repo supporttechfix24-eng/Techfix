@@ -380,6 +380,12 @@
 .tf-maint-footer{margin-top:16px;font-size:.82rem;color:#94a3b8;}
 @media (max-width:480px){ .tf-maint-card{padding:32px 22px;} }
 
+.tf-lang-item{display:flex;align-items:center;margin-left:14px;font-size:.85rem;}
+.tf-lang-link{color:var(--primary);text-decoration:none;font-weight:600;}
+.tf-lang-link:hover{text-decoration:underline;}
+.tf-lang-sep{margin:0 6px;color:#94a3b8;}
+.tf-lang-current{font-weight:700;color:var(--text);}
+@media (max-width:991px){ .tf-lang-item{margin:10px 0 0;} }
 </style>
 </head>
 <body>
@@ -438,6 +444,11 @@
           <li class="nav-item"><a class="nav-link" href="/appointment">Appointment</a></li>
           <li class="nav-item"><a class="nav-link" href="/reviews">Reviews</a></li>
           <li class="nav-item"><a class="nav-link" href="/contact">Contact</a></li>
+                  <li class="nav-item tf-lang-item">
+            <span class="tf-lang-current">English</span>
+            <span class="tf-lang-sep">|</span>
+            <a class="tf-lang-link" href="/bn/" aria-label="বাংলায় দেখুন">বাংলা</a>
+          </li>
         </ul>
       </div>
     </div>

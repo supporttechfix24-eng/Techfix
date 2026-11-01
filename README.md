@@ -79,3 +79,9 @@ techfix24-site/
 ├─ 404.html
 └─ package.json                        # just nodemailer, for the function
 ```
+
+## Downloads (admin-managed)
+`login-admin.html` → *Downloads* adds files to the public `/downloads` and
+`/bn/downloads` pages (collection `downloads`). Re-publish `firestore.rules`,
+and publish `storage.rules` in Firebase Console → Storage if you want to
+upload files (otherwise paste any direct/Drive link).

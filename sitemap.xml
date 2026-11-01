@@ -126,4 +126,14 @@
     <priority>0.6</priority>
   </url>
   -->
+  <url>
+    <loc>https://techfix24.netlify.app/downloads</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://techfix24.netlify.app/downloads"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://techfix24.netlify.app/bn/downloads"/>
+  </url>
+  <url>
+    <loc>https://techfix24.netlify.app/bn/downloads</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://techfix24.netlify.app/downloads"/>
+    <xhtml:link rel="alternate" hreflang="bn" href="https://techfix24.netlify.app/bn/downloads"/>
+  </url>
 </urlset>

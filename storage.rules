@@ -1,0 +1,12 @@
+rules_version = '2';
+// Publish in Firebase Console -> Storage -> Rules.
+// Anyone can download files in downloads/; only the admin can upload/delete.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /downloads/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.token.email == 'shamimmd1618@gmail.com';
+    }
+  }
+}

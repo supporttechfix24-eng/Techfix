@@ -197,6 +197,7 @@ table.admin-table tr:last-child td{border-bottom:none;}
       <div class="nav-link" data-section="livechat"><i class="fas fa-comment-dots"></i> Live Chat</div>
       <div class="nav-link" data-section="codeblocks"><i class="fas fa-code"></i> Code Editor</div>
       <div class="nav-link" data-section="pages"><i class="fas fa-file-circle-plus"></i> Pages</div>
+      <div class="nav-link" data-section="downloads"><i class="fas fa-download"></i> Downloads</div>
       <div class="nav-link" data-section="maintenance" id="navMaintenance"><i class="fas fa-triangle-exclamation"></i> Maintenance Mode <span id="maintNavDot" style="display:none;width:8px;height:8px;border-radius:50%;background:#f87171;margin-left:auto;"></span></div>
     </nav>
     <div class="sidebar-foot">
@@ -448,6 +449,58 @@ table.admin-table tr:last-child td{border-bottom:none;}
         </div>
       </section>
 
+      <!-- ===== DOWNLOADS ===== -->
+      <section class="page-section" id="sec-downloads">
+        <div class="card-panel">
+          <div class="tf-toolbar">
+            <div>
+              <h5 class="mb-1"><i class="fas fa-download me-2"></i>Downloads</h5>
+              <p class="panel-sub mb-0">Files added here appear on the public <a href="/downloads" target="_blank">/downloads</a> page (and <a href="/bn/downloads" target="_blank">/bn/downloads</a>). A "Downloads" link shows in the top menu automatically once at least one file is published.</p>
+            </div>
+            <button class="btn btn-primary" id="newDlBtn"><i class="fas fa-plus me-2"></i>Add File</button>
+          </div>
+          <div id="dlListWrap"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading…</p></div></div>
+        </div>
+
+        <div class="card-panel tf-editor" id="dlEditor">
+          <h5 id="dlEditorTitle">Add File</h5>
+          <div class="row">
+            <div class="col-md-6 tf-row"><label class="tf-lbl">Title (English)</label><input type="text" class="form-control" id="dlTitle" placeholder="e.g. WinRAR 7.01"></div>
+            <div class="col-md-6 tf-row"><label class="tf-lbl">Title (বাংলা, optional)</label><input type="text" class="form-control" id="dlTitleBn"></div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 tf-row"><label class="tf-lbl">Description (English)</label><textarea class="form-control" id="dlDesc" rows="2"></textarea></div>
+            <div class="col-md-6 tf-row"><label class="tf-lbl">Description (বাংলা, optional)</label><textarea class="form-control" id="dlDescBn" rows="2"></textarea></div>
+          </div>
+          <div class="row">
+            <div class="col-md-3 tf-row"><label class="tf-lbl">Category (English)</label><input type="text" class="form-control" id="dlCat" placeholder="Drivers"></div>
+            <div class="col-md-3 tf-row"><label class="tf-lbl">Category (বাংলা)</label><input type="text" class="form-control" id="dlCatBn" placeholder="ড্রাইভার"></div>
+            <div class="col-md-3 tf-row"><label class="tf-lbl">Version (optional)</label><input type="text" class="form-control" id="dlVersion" placeholder="v7.01"></div>
+            <div class="col-md-3 tf-row"><label class="tf-lbl">Size (auto for uploads)</label><input type="text" class="form-control" id="dlSize" placeholder="3.2 MB"></div>
+          </div>
+          <div class="tf-row">
+            <label class="tf-lbl">File link</label>
+            <input type="text" class="form-control" id="dlUrl" placeholder="https://… (Google Drive / Mega / any direct link) — or upload below">
+            <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
+              <input type="file" class="form-control" id="dlFile" style="max-width:320px;">
+              <button class="btn btn-outline-primary" id="dlUploadBtn" type="button"><i class="fas fa-cloud-arrow-up me-2"></i>Upload file</button>
+              <span class="tf-hint" id="dlUploadStatus"></span>
+            </div>
+            <div class="tf-hint">Upload uses Firebase Storage (publish <code>storage.rules</code> once). If you don't want to upload, just paste a link.</div>
+          </div>
+          <div class="row">
+            <div class="col-md-4 tf-row"><label class="tf-lbl">Icon (Font Awesome class)</label><input type="text" class="form-control" id="dlIcon" placeholder="fa-download"></div>
+            <div class="col-md-4 tf-row"><label class="tf-lbl">Order (small number first)</label><input type="number" class="form-control" id="dlOrder" value="0"></div>
+            <div class="col-md-4 tf-row"><div class="form-check form-switch mt-4"><input class="form-check-input" type="checkbox" id="dlPublished" checked><label class="form-check-label" for="dlPublished">Published</label></div></div>
+          </div>
+          <div class="save-bar">
+            <span class="save-status" id="dlSaveStatus"><i class="fas fa-check-circle me-1"></i>Saved</span>
+            <button class="btn btn-outline-secondary me-2" id="dlCancelBtn">Cancel</button>
+            <button class="btn btn-primary" id="dlSaveBtn"><i class="fas fa-floppy-disk me-2"></i>Save</button>
+          </div>
+        </div>
+      </section>
+
       <!-- ===== PAGES (create new pages) ===== -->
       <section class="page-section" id="sec-pages">
         <div class="card-panel">
@@ -565,6 +618,7 @@ table.admin-table tr:last-child td{border-bottom:none;}
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
 
 <script>
 const firebaseConfig = {
@@ -754,7 +808,7 @@ const sectionTitles = {
   dashboard: 'Dashboard', content: 'Site Content', pricing: 'Pricing',
   reviews: 'Customer Reviews', appointments: 'Appointment Requests',
   messages: 'Contact Messages', livechat: 'Live Chat', maintenance: 'Maintenance Mode',
-  codeblocks: 'Code Editor', pages: 'Website Pages'
+  codeblocks: 'Code Editor', pages: 'Website Pages', downloads: 'Downloads'
 };
 document.querySelectorAll('#sidebarNav .nav-link').forEach(function(link){
   link.addEventListener('click', function(){
@@ -787,6 +841,7 @@ function initAdminApp(){
   watchMaintenanceStatus();
   loadCustomBlocks();
   loadCustomPages();
+  loadDownloads();
 }
 
 /* =========================================================
@@ -1483,6 +1538,112 @@ document.getElementById('pageSaveBtn').addEventListener('click', function(){
     document.getElementById('pageEditor').classList.remove('open');
     editingPageId = null;
     document.getElementById('pgSlug').dataset.touched = '';
+  }).catch(function(err){ alert('Save failed: ' + err.message); });
+});
+
+/* =========================================================
+   DOWNLOADS  (collection: downloads)
+   ========================================================= */
+let downloadsCache = [];
+let editingDlId = null;
+
+function loadDownloads(){
+  db.collection('downloads').onSnapshot(function(snap){
+    downloadsCache = [];
+    snap.forEach(function(d){ const o = d.data() || {}; o.id = d.id; downloadsCache.push(o); });
+    downloadsCache.sort(function(a,b){ return (a.order||0) - (b.order||0); });
+    renderDownloadsList();
+  }, function(){
+    document.getElementById('dlListWrap').innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><p>Could not load downloads. Publish the updated firestore.rules.</p></div>';
+  });
+}
+
+function renderDownloadsList(){
+  const wrap = document.getElementById('dlListWrap');
+  if(!downloadsCache.length){
+    wrap.innerHTML = '<div class="empty-state"><i class="fas fa-download"></i><p>No files yet. Click <strong>Add File</strong>.</p></div>';
+    return;
+  }
+  let html = '';
+  downloadsCache.forEach(function(o){
+    html += '<div class="tf-item-card"><div class="ti-main">' +
+      '<div class="ti-title">' + escapeHtml(o.title || 'Untitled') +
+        '<span class="tf-badge ' + (o.published === false ? 'draft' : 'on') + '">' + (o.published === false ? 'Hidden' : 'Published') + '</span></div>' +
+      '<div class="ti-meta"><i class="fas fa-folder me-1"></i>' + escapeHtml(o.category || 'Other') + (o.size ? ' · ' + escapeHtml(o.size) : '') + '</div></div>' +
+      '<div><button class="btn-icon me-1 dl-edit" data-id="' + o.id + '" title="Edit"><i class="fas fa-pen"></i></button>' +
+      '<button class="btn-icon danger dl-del" data-id="' + o.id + '" title="Delete"><i class="fas fa-trash"></i></button></div></div>';
+  });
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('.dl-edit').forEach(function(b){ b.addEventListener('click', function(){ openDlEditor(b.getAttribute('data-id')); }); });
+  wrap.querySelectorAll('.dl-del').forEach(function(b){
+    b.addEventListener('click', function(){
+      if(!confirm('Delete this download from the website?')) return;
+      db.collection('downloads').doc(b.getAttribute('data-id')).delete();
+    });
+  });
+}
+
+function openDlEditor(id){
+  editingDlId = id || null;
+  const o = id ? downloadsCache.find(function(x){ return x.id === id; }) : null;
+  const set = function(k, v){ document.getElementById(k).value = v; };
+  document.getElementById('dlEditorTitle').textContent = o ? 'Edit File' : 'Add File';
+  set('dlTitle', o ? (o.title||'') : ''); set('dlTitleBn', o ? (o.titleBn||'') : '');
+  set('dlDesc', o ? (o.description||'') : ''); set('dlDescBn', o ? (o.descriptionBn||'') : '');
+  set('dlCat', o ? (o.category||'') : ''); set('dlCatBn', o ? (o.categoryBn||'') : '');
+  set('dlVersion', o ? (o.version||'') : ''); set('dlSize', o ? (o.size||'') : '');
+  set('dlUrl', o ? (o.url||'') : ''); set('dlIcon', o ? (o.icon||'') : '');
+  set('dlOrder', o ? (o.order||0) : 0);
+  document.getElementById('dlPublished').checked = o ? o.published !== false : true;
+  document.getElementById('dlFile').value = '';
+  document.getElementById('dlUploadStatus').textContent = '';
+  document.getElementById('dlEditor').classList.add('open');
+  document.getElementById('dlEditor').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+document.getElementById('newDlBtn').addEventListener('click', function(){ openDlEditor(null); });
+document.getElementById('dlCancelBtn').addEventListener('click', function(){
+  document.getElementById('dlEditor').classList.remove('open'); editingDlId = null;
+});
+
+document.getElementById('dlUploadBtn').addEventListener('click', function(){
+  const f = document.getElementById('dlFile').files[0];
+  const st = document.getElementById('dlUploadStatus');
+  if(!f){ st.textContent = 'Choose a file first.'; return; }
+  const name = Date.now() + '-' + f.name.replace(/[^A-Za-z0-9._-]/g, '_');
+  const task = firebase.storage().ref('downloads/' + name).put(f);
+  task.on('state_changed', function(sn){
+    st.textContent = 'Uploading… ' + Math.round(sn.bytesTransferred / sn.totalBytes * 100) + '%';
+  }, function(err){
+    st.textContent = 'Upload failed: ' + err.message;
+  }, function(){
+    task.snapshot.ref.getDownloadURL().then(function(url){
+      document.getElementById('dlUrl').value = url;
+      if(!document.getElementById('dlSize').value){
+        const mb = f.size / 1048576;
+        document.getElementById('dlSize').value = mb >= 1 ? mb.toFixed(1) + ' MB' : Math.max(1, Math.round(f.size / 1024)) + ' KB';
+      }
+      st.textContent = 'Uploaded ✓ — now press Save.';
+    });
+  });
+});
+
+document.getElementById('dlSaveBtn').addEventListener('click', function(){
+  const v = function(k){ return document.getElementById(k).value.trim(); };
+  const title = v('dlTitle'), url = v('dlUrl');
+  if(!title){ alert('Please enter a title.'); return; }
+  if(!/^(https?:)?\/\//i.test(url) && url.charAt(0) !== '/'){ alert('Please enter a valid file link (starting with https://) or upload a file.'); return; }
+  const data = {
+    title: title, titleBn: v('dlTitleBn'), description: v('dlDesc'), descriptionBn: v('dlDescBn'),
+    category: v('dlCat'), categoryBn: v('dlCatBn'), version: v('dlVersion'), size: v('dlSize'),
+    url: url, icon: v('dlIcon'), order: parseInt(v('dlOrder'), 10) || 0,
+    published: document.getElementById('dlPublished').checked,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  const q = editingDlId ? db.collection('downloads').doc(editingDlId).set(data, { merge: true }) : db.collection('downloads').add(data);
+  q.then(function(){
+    const st = document.getElementById('dlSaveStatus'); st.classList.add('show');
+    setTimeout(function(){ st.classList.remove('show'); }, 2500);
+    document.getElementById('dlEditor').classList.remove('open'); editingDlId = null;
   }).catch(function(err){ alert('Save failed: ' + err.message); });
 });
 
