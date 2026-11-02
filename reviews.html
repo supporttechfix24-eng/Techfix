@@ -751,13 +751,14 @@
           rating,
           review: reviewText,
           date: firebase.firestore.FieldValue.serverTimestamp(),
-          approved: true
+          approved: false,
+          status: 'pending'
         });
         
         reviewForm.reset();
         ratingInput.value = 0;
         ratingStars.forEach(s => s.classList.remove('active'));
-        alert("Thanks! Your review is submitted.");
+        alert("Thanks! Your review has been received. It will appear on the website after a quick automatic safety check (about 5 minutes).");
         loadReviews();
       } catch (err) {
         console.error(err);

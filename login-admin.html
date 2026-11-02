@@ -275,7 +275,7 @@ table.admin-table tr:last-child td{border-bottom:none;}
       <section class="page-section" id="sec-reviews">
         <div class="card-panel">
           <h5>Customer Reviews</h5>
-          <p class="panel-sub">Approve or remove reviews. Only approved reviews appear on your website and homepage slider.</p>
+          <p class="panel-sub">New reviews wait 5 minutes, then are scanned automatically for malware / suspicious content. Clean ones are approved; suspicious ones show as Flagged with the reason so you can decide. Only approved reviews appear on your website and homepage slider.</p>
           <div id="reviewsTableWrap"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading reviews…</p></div></div>
         </div>
       </section>
@@ -986,9 +986,10 @@ function renderReviews(snap){
       '<td><strong>' + escapeHtml(r.name||'—') + '</strong><br><span class="text-muted" style="font-size:.78rem;">' + escapeHtml(r.email||'') + '</span></td>' +
       '<td>' + escapeHtml(r.service||'—') + '</td>' +
       '<td class="stars-sm">' + stars + '</td>' +
-      '<td style="max-width:280px;">' + escapeHtml(r.review||'') + '</td>' +
+      '<td style="max-width:280px;">' + escapeHtml(r.review||'') +
+        (r.status === 'flagged' && r.scanReasons && r.scanReasons.length ? '<div class="mt-1" style="font-size:.76rem;color:#b91c1c;"><i class="fas fa-triangle-exclamation me-1"></i>' + r.scanReasons.map(escapeHtml).join('; ') + '</div>' : '') + '</td>' +
       '<td>' + date + '</td>' +
-      '<td>' + (r.approved ? '<span class="badge-approved">Approved</span>' : '<span class="badge-pending">Pending</span>') + '</td>' +
+      '<td>' + (r.approved ? '<span class="badge-approved">Approved</span>' : (r.status === 'flagged' ? '<span class="badge-pending" style="background:#fee2e2;color:#991b1b;">Flagged</span>' : '<span class="badge-pending">Pending (checking)</span>')) + '</td>' +
       '<td style="white-space:nowrap;">' +
         '<button class="btn-icon me-1 btn-approve-toggle" data-id="' + id + '" data-approved="' + (r.approved ? '1' : '0') + '" title="' + (r.approved?'Unapprove':'Approve') + '"><i class="fas fa-' + (r.approved?'eye-slash':'check') + '"></i></button>' +
         '<button class="btn-icon danger btn-review-delete" data-id="' + id + '" title="Delete"><i class="fas fa-trash"></i></button>' +
@@ -1002,7 +1003,7 @@ document.getElementById('reviewsTableWrap').addEventListener('click', function(e
   if(approveBtn){
     const id = approveBtn.getAttribute('data-id');
     const isApproved = approveBtn.getAttribute('data-approved') === '1';
-    db.collection('reviews').doc(id).update({ approved: !isApproved }).then(loadReviews).then(loadDashboardStats);
+    db.collection('reviews').doc(id).update({ approved: !isApproved, status: !isApproved ? 'approved' : 'hidden' }).then(loadReviews).then(loadDashboardStats);
     return;
   }
   const delBtn = e.target.closest('.btn-review-delete');

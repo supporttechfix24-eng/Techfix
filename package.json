@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "TechFix static site + Netlify Functions (appointment confirmation email)",
   "dependencies": {
-    "nodemailer": "^6.9.14"
+    "nodemailer": "^6.9.14",
+    "firebase-admin": "^12.7.0"
   }
 }

@@ -751,13 +751,14 @@
           rating,
           review: reviewText,
           date: firebase.firestore.FieldValue.serverTimestamp(),
-          approved: true
+          approved: false,
+          status: 'pending'
         });
         
         reviewForm.reset();
         ratingInput.value = 0;
         ratingStars.forEach(s => s.classList.remove('active'));
-        alert("ধন্যবাদ! আপনার রিভিউ জমা হয়েছে।");
+        alert("ধন্যবাদ! আপনার রিভিউ জমা হয়েছে। একটি দ্রুত স্বয়ংক্রিয় নিরাপত্তা যাচাইয়ের পর (প্রায় ৫ মিনিট) এটি ওয়েবসাইটে দেখা যাবে।");
         loadReviews();
       } catch (err) {
         console.error(err);
