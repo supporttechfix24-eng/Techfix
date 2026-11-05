@@ -1,6 +1,9 @@
 [build]
   publish = "."
   functions = "netlify/functions"
+  # Skip the build (and its credit cost) when only docs / rules files changed.
+  # firestore.rules and storage.rules are pasted into Firebase manually, not served by Netlify.
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ':(exclude)*.md' ':(exclude)firestore.rules' ':(exclude)storage.rules'"
 
 [functions."review-moderation"]
-  schedule = "* * * * *"
+  schedule = "*/5 * * * *"

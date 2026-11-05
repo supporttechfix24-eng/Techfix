@@ -276,6 +276,10 @@ table.admin-table tr:last-child td{border-bottom:none;}
         <div class="card-panel">
           <h5>Customer Reviews</h5>
           <p class="panel-sub">New reviews wait 5 minutes, then are scanned automatically for malware / suspicious content. Clean ones are approved; suspicious ones show as Flagged with the reason so you can decide. Only approved reviews appear on your website and homepage slider.</p>
+          <div class="d-flex align-items-center gap-2 flex-wrap mb-3">
+            <button class="btn btn-outline-primary btn-sm" id="checkReviewsBtn"><i class="fas fa-shield-halved me-2"></i>Check pending reviews now</button>
+            <span class="tf-hint" id="checkReviewsStatus"></span>
+          </div>
           <div id="reviewsTableWrap"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading reviews…</p></div></div>
         </div>
       </section>
@@ -998,6 +1002,24 @@ function renderReviews(snap){
   });
   wrap.innerHTML = '<div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Customer</th><th>Service</th><th>Rating</th><th>Review</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
+document.getElementById('checkReviewsBtn').addEventListener('click', function(){
+  const st = document.getElementById('checkReviewsStatus');
+  const user = auth.currentUser;
+  if(!user){ st.textContent = 'Please sign in again.'; return; }
+  st.style.color = ''; st.textContent = 'Checking…';
+  user.getIdToken().then(function(tok){
+    return fetch('/.netlify/functions/review-check-now', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken: tok })
+    });
+  }).then(function(r){ return r.json().catch(function(){ return { ok:false, error:'Function not found or not deployed (HTTP ' + r.status + ').' }; }); })
+  .then(function(d){
+    if(!d.ok){ st.style.color = '#b91c1c'; st.textContent = 'Failed: ' + (d.error || 'unknown error'); return; }
+    st.style.color = d.errors && d.errors.length ? '#b91c1c' : '#166534';
+    st.textContent = 'Done — checked ' + d.checked + ', approved ' + d.approved + ', flagged ' + d.flagged + (d.errors && d.errors.length ? ' | Problems: ' + d.errors.join('; ') : '');
+    loadReviews(); loadDashboardStats();
+  }).catch(function(e){ st.style.color = '#b91c1c'; st.textContent = 'Failed: ' + e.message; });
+});
+
 document.getElementById('reviewsTableWrap').addEventListener('click', function(e){
   const approveBtn = e.target.closest('.btn-approve-toggle');
   if(approveBtn){

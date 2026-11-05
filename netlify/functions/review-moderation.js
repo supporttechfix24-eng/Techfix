@@ -14,11 +14,12 @@
 // Required Netlify environment variables:
 //   FIREBASE_SERVICE_ACCOUNT   the full service-account JSON (Firebase Console ->
 //                              Project settings -> Service accounts -> Generate key)
+//                              (talks to Firestore over REST — no extra npm package needed)
 //   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM   (same as the appointment email)
 // Optional:
 //   SAFE_BROWSING_API_KEY      Google Safe Browsing key — links are also checked against Google's malware list
 
-const admin = require('firebase-admin');
+const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
 const SITE_URL = 'https://techfix24.netlify.app';
@@ -216,58 +217,132 @@ async function sendThanks(r) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Scheduled handler                                                  */
+/*  Firestore over REST (service-account auth, no firebase-admin)      */
 /* ------------------------------------------------------------------ */
-function getDb() {
-  if (!admin.apps.length) {
-    const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-    if (!raw) throw new Error('FIREBASE_SERVICE_ACCOUNT is not set');
-    admin.initializeApp({ credential: admin.credential.cert(JSON.parse(raw)) });
-  }
-  return admin.firestore();
+const PROJECT_ID = 'techfix-4f654';
+const DOCS = 'https://firestore.googleapis.com/v1/projects/' + PROJECT_ID + '/databases/(default)/documents';
+let tokenCache = { value: null, exp: 0 };
+
+function b64url(buf) { return Buffer.from(buf).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_'); }
+
+async function getAccessToken() {
+  if (tokenCache.value && Date.now() < tokenCache.exp - 60000) return tokenCache.value;
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (!raw) throw new Error('FIREBASE_SERVICE_ACCOUNT is not set in Netlify environment variables');
+  let sa;
+  try { sa = JSON.parse(raw); } catch (e) { throw new Error('FIREBASE_SERVICE_ACCOUNT is not valid JSON (paste the whole key file content)'); }
+  if (!sa.client_email || !sa.private_key) throw new Error('FIREBASE_SERVICE_ACCOUNT is missing client_email / private_key');
+  const now = Math.floor(Date.now() / 1000);
+  const head = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const claim = b64url(JSON.stringify({
+    iss: sa.client_email, scope: 'https://www.googleapis.com/auth/datastore',
+    aud: 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600,
+  }));
+  const sig = crypto.createSign('RSA-SHA256').update(head + '.' + claim).sign(sa.private_key);
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'grant_type=' + encodeURIComponent('urn:ietf:params:oauth:grant-type:jwt-bearer') + '&assertion=' + head + '.' + claim + '.' + b64url(sig),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.access_token) throw new Error('Google sign-in failed: ' + (data.error_description || data.error || res.status));
+  tokenCache = { value: data.access_token, exp: Date.now() + (data.expires_in || 3600) * 1000 };
+  return tokenCache.value;
 }
 
-exports.handler = async function () {
-  let db;
-  try { db = getDb(); }
-  catch (e) { console.error('review-moderation:', e.message); return { statusCode: 500 }; }
+async function fsFetch(url, opts) {
+  const token = await getAccessToken();
+  const res = await fetch(url, Object.assign({}, opts, {
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+  }));
+  const data = await res.json().catch(function () { return {}; });
+  if (!res.ok) throw new Error('Firestore ' + res.status + ': ' + ((data.error && data.error.message) || 'request failed'));
+  return data;
+}
 
-  const snap = await db.collection('reviews').where('status', '==', 'pending').get();
+function str(f, k) { return (f[k] && f[k].stringValue) || ''; }
+
+async function fetchPending() {
+  const rows = await fsFetch(DOCS + ':runQuery', {
+    method: 'POST',
+    body: JSON.stringify({ structuredQuery: {
+      from: [{ collectionId: 'reviews' }],
+      where: { fieldFilter: { field: { fieldPath: 'status' }, op: 'EQUAL', value: { stringValue: 'pending' } } },
+      limit: 50,
+    } }),
+  });
+  return rows.filter(function (r) { return r.document; }).map(function (r) {
+    const f = r.document.fields || {};
+    return {
+      path: r.document.name,
+      id: r.document.name.split('/').pop(),
+      name: str(f, 'name'), email: str(f, 'email'), service: str(f, 'service'), review: str(f, 'review'),
+      rating: f.rating ? parseInt(f.rating.integerValue || f.rating.doubleValue || 0, 10) : 0,
+      dateMs: f.date && f.date.timestampValue ? new Date(f.date.timestampValue).getTime() : null,
+    };
+  });
+}
+
+async function updateReview(r, fields) {
+  const body = { fields: {} };
+  Object.keys(fields).forEach(function (k) {
+    const v = fields[k];
+    body.fields[k] = typeof v === 'boolean' ? { booleanValue: v }
+      : Array.isArray(v) ? { arrayValue: { values: v.map(function (x) { return { stringValue: String(x) }; }) } }
+      : v instanceof Date ? { timestampValue: v.toISOString() }
+      : { stringValue: String(v) };
+  });
+  const mask = Object.keys(fields).map(function (k) { return 'updateMask.fieldPaths=' + encodeURIComponent(k); }).join('&');
+  await fsFetch('https://firestore.googleapis.com/v1/' + r.path + '?' + mask, { method: 'PATCH', body: JSON.stringify(body) });
+}
+
+/* ------------------------------------------------------------------ */
+/*  Moderation run (used by the schedule AND the admin "Check now")    */
+/* ------------------------------------------------------------------ */
+async function processPending(opts) {
+  const force = !!(opts && opts.force);       // admin "Check now" skips the 5-minute wait
+  const pending = await fetchPending();
   const cutoff = Date.now() - HOLD_MS;
-  const due = snap.docs.filter(function (d) {
-    const t = d.get('date');
-    // A pending review with no usable date is treated as due so it can never get stuck.
-    return !t || !t.toMillis || t.toMillis() <= cutoff;
-  }).slice(0, MAX_PER_RUN);
+  const due = pending.filter(function (r) { return force || !r.dateMs || r.dateMs <= cutoff; }).slice(0, MAX_PER_RUN);
+  const result = { pending: pending.length, checked: due.length, approved: 0, flagged: 0, errors: [] };
 
-  let approved = 0, flagged = 0;
-  for (const doc of due) {
-    const r = doc.data();
+  for (const r of due) {
     try {
       const scan = scanReview(r);
       const gsb = await safeBrowsingHits(scan.urls);
       const reasons = scan.reasons.concat(gsb);
-      const base = { checkedAt: admin.firestore.FieldValue.serverTimestamp(), scanReasons: reasons };
-
       if (reasons.length) {
-        await doc.ref.update(Object.assign({ approved: false, status: 'flagged' }, base));
-        flagged++;
+        await updateReview(r, { approved: false, status: 'flagged', scanReasons: reasons, checkedAt: new Date() });
+        result.flagged++;
       } else {
-        await doc.ref.update(Object.assign({ approved: true, status: 'approved' }, base));
-        approved++;
+        await updateReview(r, { approved: true, status: 'approved', scanReasons: [], checkedAt: new Date() });
+        result.approved++;
         try {
-          if (await sendThanks(r)) await doc.ref.update({ thankedAt: admin.firestore.FieldValue.serverTimestamp() });
+          if (await sendThanks(r)) await updateReview(r, { thankedAt: new Date() });
         } catch (mailErr) {
-          console.error('review-moderation: thank-you email failed for', doc.id, mailErr);
+          console.error('review-moderation: thank-you email failed for', r.id, mailErr);
+          result.errors.push('Thank-you email failed: ' + mailErr.message);
         }
       }
     } catch (err) {
-      console.error('review-moderation: failed to process', doc.id, err);
+      console.error('review-moderation: failed to process', r.id, err);
+      result.errors.push(err.message);
     }
   }
-  console.log('review-moderation: checked', due.length, '| approved', approved, '| flagged', flagged);
-  return { statusCode: 200 };
+  console.log('review-moderation:', JSON.stringify(result));
+  return result;
+}
+
+exports.handler = async function () {
+  try {
+    await processPending();
+    return { statusCode: 200 };
+  } catch (e) {
+    console.error('review-moderation:', e.message);
+    return { statusCode: 500 };
+  }
 };
 
+exports.processPending = processPending;
 exports.scanReview = scanReview;
 exports.buildEmail = buildEmail;
