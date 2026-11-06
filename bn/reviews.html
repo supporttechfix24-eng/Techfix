@@ -458,7 +458,19 @@
 .tf-lang-sep{margin:0 6px;color:#94a3b8;}
 .tf-lang-current{font-weight:700;color:var(--text);}
 @media (max-width:991px){ .tf-lang-item{margin:10px 0 0;} }
-</style>
+
+    /* ----- "Your review" box (author's own pending / rejected review) ----- */
+    .my-review{border:1px solid #e5e7eb;border-radius:14px;padding:18px 20px;margin-bottom:18px;background:#fff;position:relative;}
+    .my-review .my-body{opacity:.5;}
+    .my-pending{border-style:dashed;}
+    .my-rejected{border-color:#fca5a5;background:#fef2f2;}
+    .my-rejected .my-body{opacity:.6;}
+    .my-badge{display:inline-block;font-size:.78rem;font-weight:600;padding:4px 10px;border-radius:20px;margin-bottom:10px;}
+    .my-pending .my-badge{background:#fef3c7;color:#92400e;}
+    .my-rejected .my-badge{background:#fee2e2;color:#991b1b;}
+    .my-reasons{margin:8px 0 0;padding-left:18px;font-size:.88rem;color:#7f1d1d;}
+    .my-close{position:absolute;top:10px;right:12px;border:none;background:none;font-size:1.3rem;line-height:1;color:#6b7280;cursor:pointer;}
+  </style>
 </head>
 <body>
 
@@ -613,6 +625,7 @@
       <!-- Reviews Container -->
       <div class="row justify-content-center">
         <div class="col-lg-10">
+          <div id="myReviewsBox"></div>
           <div id="reviewsContainer"></div>
         </div>
       </div>
@@ -744,7 +757,7 @@
       }
       
       try {
-        await db.collection('reviews').add({
+        const newRef = await db.collection('reviews').add({
           name,
           email,
           service,
@@ -755,15 +768,73 @@
           status: 'pending'
         });
         
+        rememberMyReview(newRef.id);
         reviewForm.reset();
         ratingInput.value = 0;
         ratingStars.forEach(s => s.classList.remove('active'));
         alert("ধন্যবাদ! আপনার রিভিউ জমা হয়েছে। একটি দ্রুত স্বয়ংক্রিয় নিরাপত্তা যাচাইয়ের পর (প্রায় ৫ মিনিট) এটি ওয়েবসাইটে দেখা যাবে।");
         loadReviews();
+        refreshMyReviews();
+        const mb = document.getElementById('myReviewsBox'); if (mb) mb.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } catch (err) {
         console.error(err);
         alert("রিভিউ জমা দিতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
       }
+    });
+
+
+    // ===== "Your review": the author sees their own pending / rejected review =====
+    const MY_KEY = 'tfMyReviews';
+    let myTimer = null;
+    function escH(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function myIds(){ try { return JSON.parse(localStorage.getItem(MY_KEY) || '[]').filter(x => typeof x === 'string').slice(-10); } catch (e) { return []; } }
+    function saveMyIds(a){ try { localStorage.setItem(MY_KEY, JSON.stringify(a.slice(-10))); } catch (e) {} }
+    function rememberMyReview(id){ const a = myIds(); if (a.indexOf(id) < 0) a.push(id); saveMyIds(a); }
+
+    async function refreshMyReviews(){
+      clearTimeout(myTimer);
+      const box = document.getElementById('myReviewsBox');
+      if (!box) return;
+      const ids = myIds();
+      if (!ids.length) { box.innerHTML = ''; return; }
+      let html = '', keep = [], poll = false, approvedNow = false;
+      for (const id of ids) {
+        let snap;
+        try { snap = await db.collection('reviews').doc(id).get(); }
+        catch (e) { keep.push(id); continue; }          // temporary error: keep, do not poll
+        if (!snap.exists) continue;                       // deleted by admin
+        const r = snap.data();
+        const st = r.status || (r.approved ? 'approved' : 'pending');
+        if (r.approved === true || st === 'approved') { approvedNow = true; continue; }   // now live in the public list
+        if (st === 'hidden') continue;
+        keep.push(id);
+        let stars = '';
+        for (let i = 1; i <= 5; i++) stars += i <= r.rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
+        const body = '<div class="my-body"><strong>' + escH(r.name) + '</strong>' +
+          '<div class="stars my-2">' + stars + '</div><div>' + escH(r.review) + '</div>' +
+          '<div class="badge bg-light text-primary mt-2">' + escH(r.service) + '</div></div>';
+        if (st === 'flagged') {
+          const reasons = (r.publicReasonsBn && r.publicReasonsBn.length ? r.publicReasonsBn : r.publicReasons) || [];
+          html += '<div class="my-review my-rejected"><button class="my-close" data-id="' + id + '" aria-label="বন্ধ করুন">&times;</button>' +
+            '<span class="my-badge"><i class="fas fa-circle-xmark me-1"></i>প্রকাশ করা হয়নি</span>' +
+            body + '<div class="mt-2 small fw-semibold" style="color:#991b1b;">আমাদের স্বয়ংক্রিয় নিরাপত্তা যাচাইয়ে এই রিভিউটি অনুমোদন করা যায়নি:</div>' +
+            '<ul class="my-reasons">' + reasons.map(x => '<li>' + escH(x) + '</li>').join('') + '</ul>' +
+            '<div class="small text-muted mt-2">বিস্তারিত আপনার ইমেইলেও পাঠানো হয়েছে।</div></div>';
+        } else {
+          poll = true;
+          html += '<div class="my-review my-pending"><span class="my-badge"><i class="fas fa-hourglass-half me-1"></i>যাচাই চলছে — অনুমোদন না হওয়া পর্যন্ত (প্রায় ৫ মিনিট) শুধু আপনি এটি দেখতে পাবেন</span>' + body + '</div>';
+        }
+      }
+      saveMyIds(keep);
+      box.innerHTML = html ? '<h5 class="mb-3"><i class="fas fa-user-pen me-2"></i>আপনার রিভিউ</h5>' + html : '';
+      if (approvedNow) loadReviews();
+      if (poll) myTimer = setTimeout(refreshMyReviews, 20000);
+    }
+    document.addEventListener('click', function(e){
+      const b = e.target.closest && e.target.closest('.my-close');
+      if (!b) return;
+      saveMyIds(myIds().filter(x => x !== b.getAttribute('data-id')));
+      refreshMyReviews();
     });
 
     // Load Reviews
@@ -816,15 +887,15 @@
           reviewsContainer.innerHTML += `
             <div class="review-card animate">
               <div class="d-flex align-items-center mb-3">
-                <div class="reviewer-img">${initials}</div>
+                <div class="reviewer-img">${escH(initials)}</div>
                 <div>
-                  <strong>${r.name}</strong>
+                  <strong>${escH(r.name)}</strong>
                   <div class="text-muted small">${formatted}</div>
                 </div>
               </div>
               <div class="stars mb-2">${stars}</div>
-              <div class="mb-3">${r.review}</div>
-              <div class="badge bg-light text-primary">${r.service}</div>
+              <div class="mb-3">${escH(r.review)}</div>
+              <div class="badge bg-light text-primary">${escH(r.service)}</div>
             </div>`;
         });
       } catch (err) {
@@ -852,7 +923,7 @@
     });
 
     // Load reviews on page load
-    document.addEventListener("DOMContentLoaded", loadReviews);
+    document.addEventListener("DOMContentLoaded", function(){ loadReviews(); refreshMyReviews(); });
   </script>
 
 <script>

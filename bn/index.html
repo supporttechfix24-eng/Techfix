@@ -1083,6 +1083,7 @@ body.chat-open {
         return out;
       }
       function render(reviews){
+        function e(v){ return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
         var inner = document.getElementById('tfTestimonialInner');
         var dots = document.getElementById('tfTestimonialDots');
         if(!reviews.length){
@@ -1093,11 +1094,11 @@ body.chat-open {
           var card = '<div class="col-lg-7 col-md-9 text-center">' +
               '<div class="testimonial-card mx-auto">' +
                 '<div class="d-flex flex-column align-items-center mb-3">' +
-                  '<div class="client-img d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary fw-bold mb-2">' + initials(r.name) + '</div>' +
-                  '<h5 class="mb-1">' + (r.name||'গ্রাহক') + '</h5>' +
+                  '<div class="client-img d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary fw-bold mb-2">' + e(initials(r.name)) + '</div>' +
+                  '<h5 class="mb-1">' + e(r.name||'গ্রাহক') + '</h5>' +
                   '<div class="stars">' + starsHtml2(r.rating||5) + '</div>' +
                 '</div>' +
-                '<p class="mb-0">"' + (r.review||'') + '"</p>' +
+                '<p class="mb-0">"' + e(r.review||'') + '"</p>' +
               '</div></div>';
           return '<div class="carousel-item ' + (i===0?'active':'') + '"><div class="row g-4 justify-content-center">' + card + '</div></div>';
         }).join('');

@@ -50,7 +50,7 @@ const RULES = [
   [/[A-Za-z0-9+\/=_-]{70,}/, 'long encoded / random string'],
 ];
 
-const URL_RE = /((?:https?:\/\/|ftp:\/\/|www\.)[^\s<>"')]+)|\b([a-z0-9-]+\.)+(com|net|org|info|biz|io|co|me|ly|app|xyz|top|click|link|site|online|shop|store|bd|in|ru|cn|tk|ml|ga|cf|gq|zip|mov)\b(\/[^\s]*)?/gi;
+const URL_RE = /((?:[hH][tT][tT][pP][sS]?:\/\/|[fF][tT][pP]:\/\/|[wW][wW][wW]\.)[^\s<>"')]+)|\b([a-z0-9-]+\.)+(com|net|org|info|biz|io|co|me|ly|app|xyz|top|click|link|site|online|shop|store|bd|in|ru|cn|tk|ml|ga|cf|gq|zip|mov)\b(\/[^\s]*)?/g;
 
 function extractUrls(text) {
   const out = [];
@@ -86,6 +86,30 @@ function scanReview(r) {
   if (String(r.name || '').length > 80) reasons.push('name too long');
 
   return { urls: urls, reasons: Array.from(new Set(reasons)) };
+}
+
+// Plain-language reasons that are safe to show / email to the customer
+// (never include text the customer typed, so they cannot be abused to smuggle links).
+const FRIENDLY = [
+  [/Safe Browsing/i,            'A link in your review was reported as unsafe.', 'আপনার রিভিউয়ের একটি লিংক অনিরাপদ হিসেবে চিহ্নিত হয়েছে।'],
+  [/link|IP address|punycode|credentials|messaging-invite/i, 'Links or web addresses are not allowed in reviews.', 'রিভিউতে লিংক বা ওয়েব ঠিকানা দেওয়া যাবে না।'],
+  [/HTML|script|data URI|event handler|encoded markup|SQL|shell/i, 'Code or special markup is not allowed in reviews.', 'রিভিউতে কোড বা বিশেষ মার্কআপ দেওয়া যাবে না।'],
+  [/malware|piracy/i,           'Mentions of cracked software, malware or piracy are not allowed.', 'ক্র্যাক সফটওয়্যার, ম্যালওয়্যার বা পাইরেসির কথা লেখা যাবে না।'],
+  [/spam|scam|phishing/i,       'The text looks like spam, advertising or a scam.', 'লেখাটি স্প্যাম, বিজ্ঞাপন বা প্রতারণার মতো দেখাচ্ছে।'],
+  [/repeated|encoded \/ random/i, 'The text looks like repeated or random characters.', 'লেখাটি বারবার একই বা অর্থহীন অক্ষরের মতো দেখাচ্ছে।'],
+  [/invalid email/i,            'The email address looks invalid.', 'ইমেইল ঠিকানাটি সঠিক মনে হচ্ছে না।'],
+  [/name too long/i,            'The name is too long.', 'নামটি খুব বড়।'],
+];
+function friendlyReasons(reasons) {
+  const en = [], bn = [];
+  (reasons || []).forEach(function (r) {
+    let hit = null;
+    for (let i = 0; i < FRIENDLY.length; i++) { if (FRIENDLY[i][0].test(r)) { hit = FRIENDLY[i]; break; } }
+    const e = hit ? hit[1] : 'The text was flagged by our automatic safety check.';
+    const b = hit ? hit[2] : 'লেখাটি আমাদের স্বয়ংক্রিয় নিরাপত্তা যাচাইয়ে আটকে গেছে।';
+    if (en.indexOf(e) < 0) { en.push(e); bn.push(b); }
+  });
+  return { en: en, bn: bn };
 }
 
 async function safeBrowsingHits(urls) {
@@ -200,6 +224,89 @@ function buildEmail({ name, rating }) {
 }
 
 
+function buildRejectionEmail({ name, reasons }) {
+  const displayName = (name || '').trim() || 'Customer';
+  const safeName = escapeHtml(displayName);
+  const subject = 'Update on your TechFix review';
+  const items = (reasons && reasons.length ? reasons : ['The text was flagged by our automatic safety check.']);
+
+  const text =
+    `Dear ${displayName},\n\n` +
+    `Thank you for taking the time to review TechFix. Unfortunately, your review could not be published ` +
+    `because our automatic safety check found the following:\n\n` +
+    items.map(function (x) { return `  - ${x}`; }).join('\n') + `\n\n` +
+    `If you believe this is a mistake, please contact us at support.techfix24@gmail.com ` +
+    `or visit ${SITE_URL}/contact and our team will review it manually. ` +
+    `You are also welcome to submit a new review without the items above.\n\n` +
+    `Best regards,\n` +
+    `TechFix Team\n` +
+    `Computer & Software Services\n` +
+    `Sakhipur, Tangail, Bangladesh\n` +
+    `Email: support.techfix24@gmail.com\n` +
+    `Website: ${SITE_URL}`;
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${subject}</title></head>
+<body style="margin:0; padding:0; background:#f5f7fa; font-family:Arial, Helvetica, sans-serif; color:#222;">
+  <div style="width:100%; padding:30px 12px; box-sizing:border-box;">
+    <div style="max-width:520px; margin:0 auto; background:#ffffff; border-radius:10px; border:1px solid #e5e7eb; overflow:hidden;">
+      <div style="background:#0d6efd; padding:22px 30px;">
+        <span style="color:#ffffff; font-size:22px; font-weight:bold; letter-spacing:.3px;">TechFix</span>
+      </div>
+      <div style="padding:30px;">
+        <h2 style="color:#0d6efd; margin:0 0 20px; font-size:21px; line-height:1.3;">Update on your review</h2>
+        <p style="margin:0 0 16px; font-size:15px; line-height:1.6;">Dear ${safeName},</p>
+        <p style="margin:0 0 16px; font-size:15px; line-height:1.7; color:#333;">
+          Thank you for taking the time to review TechFix. Unfortunately, your review could not be published
+          because our automatic safety check found the following:
+        </p>
+        <div style="margin:0 0 18px; padding:14px 18px; background:#fff7ed; border-left:4px solid #f59e0b; border-radius:6px;">
+          <ul style="margin:0; padding-left:18px; font-size:14px; line-height:1.8; color:#7c2d12;">
+            ${items.map(function (x) { return '<li>' + escapeHtml(x) + '</li>'; }).join('')}
+          </ul>
+        </div>
+        <p style="margin:0 0 16px; font-size:15px; line-height:1.7; color:#333;">
+          If you believe this is a mistake, please contact us at
+          <a href="mailto:support.techfix24@gmail.com" style="color:#0d6efd;">support.techfix24@gmail.com</a>
+          or visit our <a href="${SITE_URL}/contact" style="color:#0d6efd;">contact page</a> and our team will review it manually.
+          You are also welcome to submit a new review without the items above.
+        </p>
+        <p style="margin:24px 0 0; font-size:15px; line-height:1.6;">Best regards,<br><strong>TechFix Team</strong></p>
+        <div style="margin-top:28px; padding-top:18px; border-top:1px solid #e5e7eb; color:#555; font-size:13px; line-height:1.7;">
+          <strong style="color:#222; font-size:15px;">TechFix</strong><br>
+          Computer &amp; Software Services<br>
+          Sakhipur, Tangail, Bangladesh<br>
+          <a href="mailto:support.techfix24@gmail.com" style="color:#222; text-decoration:none;">support.techfix24@gmail.com</a><br>
+          <a href="${SITE_URL}" style="color:#222; text-decoration:none;">techfix24.netlify.app</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+  return { subject, text, html };
+}
+
+async function sendMailTo(to, mail) {
+  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM } = process.env;
+  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !SMTP_FROM) {
+    console.error('review-moderation: SMTP environment variables are not fully configured; email skipped.');
+    return false;
+  }
+  const transporter = nodemailer.createTransport({
+    host: SMTP_HOST, port: Number(SMTP_PORT), secure: Number(SMTP_PORT) === 465,
+    auth: { user: SMTP_USER, pass: SMTP_PASS },
+  });
+  await transporter.sendMail({ from: SMTP_FROM, to: String(to).trim(), subject: mail.subject, text: mail.text, html: mail.html });
+  return true;
+}
+
+async function sendRejection(r, reasons) {
+  if (!/^[^\s@,;<>"]+@[^\s@,;<>"]+\.[^\s@,;<>"]+$/.test(String(r.email || ''))) return false;
+  return sendMailTo(r.email, buildRejectionEmail({ name: String(r.name || '').slice(0, 80), reasons: reasons }));
+}
+
 async function sendThanks(r) {
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM } = process.env;
   if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !SMTP_FROM) {
@@ -312,10 +419,21 @@ async function processPending(opts) {
       const gsb = await safeBrowsingHits(scan.urls);
       const reasons = scan.reasons.concat(gsb);
       if (reasons.length) {
-        await updateReview(r, { approved: false, status: 'flagged', scanReasons: reasons, checkedAt: new Date() });
+        const fr = friendlyReasons(reasons);
+        await updateReview(r, {
+          approved: false, status: 'flagged', scanReasons: reasons,
+          publicReasons: fr.en, publicReasonsBn: fr.bn, checkedAt: new Date(),
+        });
         result.flagged++;
+        try {
+          if (await sendRejection(r, fr.en)) await updateReview(r, { rejectedEmailAt: new Date() });
+        } catch (mailErr) {
+          console.error('review-moderation: rejection email failed for', r.id, mailErr);
+          result.errors.push('Rejection email failed: ' + mailErr.message);
+        }
       } else {
-        await updateReview(r, { approved: true, status: 'approved', scanReasons: [], checkedAt: new Date() });
+        // NOTE: no empty scanReasons array is written here (keeps the update minimal and reliable)
+        await updateReview(r, { approved: true, status: 'approved', checkedAt: new Date() });
         result.approved++;
         try {
           if (await sendThanks(r)) await updateReview(r, { thankedAt: new Date() });
@@ -346,3 +464,5 @@ exports.handler = async function () {
 exports.processPending = processPending;
 exports.scanReview = scanReview;
 exports.buildEmail = buildEmail;
+exports.buildRejectionEmail = buildRejectionEmail;
+exports.friendlyReasons = friendlyReasons;
